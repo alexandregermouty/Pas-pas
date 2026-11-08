@@ -376,3 +376,55 @@ mark{background:rgba(var(--gold-rgb),.28);color:inherit;border-radius:4px;paddin
 .niv .st{font-size:18px;color:var(--gold)}
 .prodcard{border-left:4px solid var(--red)}
 .model{white-space:normal;line-height:1.6;font-size:15px}
+
+/* ── v4: explanations in English ─────────────────────────────────── */
+.sheet-fb{max-height:86vh;overflow-y:auto;overscroll-behavior:contain}
+.sheet-fb .in>.row:last-child{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom));background:var(--s1);padding:10px 0 4px;margin-bottom:0}
+.xen{margin:10px 0 6px;padding:12px 14px;border-radius:14px;background:var(--s2);border-left:4px solid var(--blue2);font-family:inherit;font-style:normal;font-size:14.5px;line-height:1.5;color:var(--ink);text-align:left}
+.xen p{margin:6px 0}
+.xen-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--blue2);margin-bottom:4px}
+.xen .flag,.xlesson .flag{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:6px;background:var(--blue2);color:#fff;letter-spacing:.06em}
+.xk{display:block;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);margin:10px 0 2px}
+p>.xk{display:inline;margin:0 8px 0 0}
+.xno{color:var(--bad);font-weight:600}
+.xsec{margin:8px 0}
+.xsec>b{display:block;color:var(--ink);margin-bottom:2px}
+.xsec>div{color:var(--ink)}
+.xall{margin-top:10px;border-top:1px solid var(--line);padding-top:6px}
+.xall summary{cursor:pointer;font-weight:600;color:var(--blue2);padding:4px 0}
+.xlesson{font-family:inherit;font-style:normal;font-size:15px;line-height:1.55}
+.xen-h,.xk{font-style:normal;font-family:inherit}
+.xen i,.xlesson i{color:var(--blue2)}
+.xlesson .xen-h{margin-bottom:8px}
+.xlesson .xsec{padding:10px 0;border-bottom:1px solid var(--line);margin:0}
+.xlesson .xsec:last-child{border-bottom:0}
+.xwrap .xen{margin-top:8px}
+.doc .dtr{display:none;font-family:var(--en);font-style:italic;color:var(--dim);font-size:14.5px;margin-top:-4px;border-left:3px solid var(--line2);padding-left:10px}
+.doc.tr-on .dtr{display:block}
+.btn.on{background:var(--ink);color:var(--bg)}
+
+/* ── v4: atelier de prononciation ─────────────────────────────────── */
+.exrow{display:flex;align-items:center;gap:6px}
+.exrow .ex{flex:1;min-width:0}
+.exmic{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line2);background:var(--s1);color:var(--red);display:grid;place-items:center;cursor:pointer}
+.exmic svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2}
+.lab .labcard{padding:14px}
+.pw{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 2px;line-height:1.2}
+.pwi{display:inline-flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:9px;cursor:pointer;border:1.5px solid transparent}
+.pwi b{font-size:19px;font-weight:600;color:var(--ink)}
+.pwi i{font-style:normal;font-family:"Charis SIL","Doulos SIL","Gentium Plus","Noto Sans",system-ui,sans-serif;font-size:13px;color:var(--blue2);margin-top:2px}
+.pwi.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);border-color:color-mix(in srgb,var(--ok) 45%,transparent)}
+.pwi.near{background:color-mix(in srgb,var(--gold) 18%,transparent);border-color:color-mix(in srgb,var(--gold) 55%,transparent)}
+.pwi.miss{background:color-mix(in srgb,var(--bad) 13%,transparent);border-color:color-mix(in srgb,var(--bad) 50%,transparent)}
+.pli{align-self:center;color:var(--red);font-weight:700;font-size:14px;margin:0 -2px 14px}
+.recwrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px 0 8px}
+.bigplay.rec.on{animation:recpulse 1.2s ease-in-out infinite}
+@keyframes recpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--red) 45%,transparent)}50%{box-shadow:0 0 0 14px color-mix(in srgb,var(--red) 0%,transparent)}}
+.meter{width:240px;height:36px}
+.labres{margin-top:6px}
+.pscore{width:72px;height:72px;border-radius:50%;display:flex;align-items:baseline;justify-content:center;padding-top:22px;box-sizing:border-box;font:700 24px/1 Fraunces,Georgia,serif;color:#fff;flex:none;letter-spacing:-.02em}
+.pscore small{font-size:12px;margin-left:1px}
+.pscore.ok{background:var(--ok)}.pscore.mid{background:var(--gold)}.pscore.no{background:var(--bad)}
+.lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 3px 0 8px;vertical-align:-1px}
+.lg.ok{background:var(--ok)}.lg.near{background:var(--gold)}.lg.miss{background:var(--bad)}
+.prcv{width:100%;height:150px;margin-top:10px;border-radius:10px;background:var(--s2)}

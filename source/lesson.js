@@ -48,7 +48,8 @@ V.lesson = c => {
   const C = l.course && COURSES.find(x => x.id === l.course);
   const lvc = C ? l.course : l.lvl;
   const reads = READINGS.filter(x => (x.lessons || []).includes(l.id));
-  const exBtn = e => `<button class="ex" data-a="say" data-t="${esc(plain(e[0]))}"><span class="spk">${IC.spk}</span><span><span class="fr">${marked(e[0])}</span>${e[1] ? `<span class="en">${esc(e[1])}</span>` : ""}</span></button>`;
+  const exBtn = e => `<div class="exrow"><button class="ex" data-a="say" data-t="${esc(plain(e[0]))}"><span class="spk">${IC.spk}</span><span><span class="fr">${marked(e[0])}</span>${e[1] ? `<span class="en">${esc(e[1])}</span>` : ""}</span></button><button class="exmic" data-a="pron" data-t="${esc(plain(e[0]))}" data-en="${esc(e[1] || "")}" data-lid="${l.id}" aria-label="Prononcer">${IC.mic}</button></div>`;
+  const X = EN[l.id] || {}, enOn = S.set.en !== false;
   const links = (l.links || []).filter(id => LESSON[id]);
   const nx = nivNext(l); let k = 0; const N = () => ++k;
   const done = NIV.filter(v => ns[v.n]).length;
@@ -70,19 +71,21 @@ V.lesson = c => {
       ${l.gram ? `<div class="muted small" style="margin-top:10px">Grammaire du manuel</div><div class="kv">${l.gram.map(g => `<span class="chip">${esc(g)}</span>`).join("")}</div>` : ""}</div>` : ""}
 
     ${l.doc ? stepH(N(), "Le document", "Lisez et écoutez, puis répondez") + `<div class="card doc">
-      <div class="row between"><span class="chip sm">${esc(l.doc.k || "Texte")}</span><button class="btn sm" data-a="docPlay" data-id="${l.id}">${IC.play} Écouter</button></div>
+      <div class="row between"><span class="chip sm">${esc(l.doc.k || "Texte")}</span><span class="row" style="gap:6px">${X.tr ? `<button class="btn sm ghost" data-a="docEn">EN</button>` : ""}<button class="btn sm" data-a="docPlay" data-id="${l.id}">${IC.play} Écouter</button></span></div>
       <h4 class="doc-t">${esc(l.doc.t)}</h4>
-      ${l.doc.d.map(p => Array.isArray(p) ? `<p class="dl"><b>${esc(p[0])} :</b> ${marked(p[1])}</p>` : `<p>${marked(p)}</p>`).join("")}
+      ${l.doc.d.map((p, i) => (Array.isArray(p) ? `<p class="dl"><b>${esc(p[0])} :</b> ${marked(p[1])}</p>` : `<p>${marked(p)}</p>`) + (X.tr && X.tr[i] ? `<p class="dtr">${esc(X.tr[i])}</p>` : "")).join("")}
+      ${X.tr ? `<div class="muted tiny">Touchez <b>EN</b> pour afficher la traduction anglaise sous chaque paragraphe.</div>` : ""}
       <div class="muted tiny">Les mots en <mark>surligné</mark> illustrent le point de grammaire.</div></div>
-      ${l.doc.q ? `<div class="card"><div class="qk">Avez-vous compris ?</div><div id="docq">${quizForm("doc", l.doc.q.map(q => [q[0], q[1], q[2], q[3] || ""]))}<div id="qres"></div></div></div>` : ""}` : ""}
+      ${l.doc.q ? `<div class="card"><div class="qk">Avez-vous compris ?</div><div id="docq">${quizForm("doc", docQs(l))}<div id="qres"></div></div></div>` : ""}` : ""}
 
-    ${(F.h || R.h) ? stepH(N(), "La règle", "Comprendre le fonctionnement") + `<div class="card rulecard" id="rc">
+    ${(F.h || R.h) ? stepH(N(), "La règle", "Comprendre le fonctionnement") + `<div class="card rulecard${enOn ? " en-on" : ""}" id="rc">
       <div class="row between" style="align-items:flex-start;gap:10px"><div class="rule-h">${markHtml(F.h || R.h)}</div>${F.h && R.h ? `<button class="btn sm ghost enbtn" data-a="enToggle">EN</button>` : ""}</div>
       ${F.h && R.h ? `<div class="engl rule-en">${R.h}</div>` : ""}
       ${(F.h ? pts : epts).length ? `<ul class="pts">${(F.h ? pts : epts).map((p, i) => `<li>${markHtml(p)}${F.h && epts[i] ? `<div class="engl">${epts[i]}</div>` : ""}</li>`).join("")}</ul>` : ""}
       ${(l.vis || []).map(visual).join("")}
       ${(F.w || R.warn) ? `<div class="callout warn"><span class="k">Attention</span>${markHtml(F.w || R.warn)}${F.w && R.warn ? `<div class="engl">${R.warn}</div>` : ""}</div>` : ""}
       </div>` : ""}
+    ${X.s ? stepH(N(), "Explained in English", "The whole rule, step by step") + `<div class="card xlesson"><div class="xen-h"><span class="flag">EN</span>In depth</div>${X.s.map(secHtml).join("")}</div>` : ""}
 
     ${l.sons ? `<div class="card"><div class="qk" style="color:var(--blue)">Sons et intonation</div><div style="font-weight:600">${esc(l.sons.t)}</div><div class="small muted" style="margin:4px 0 8px">${l.sons.tip}</div>${l.sons.ex.map(e => exBtn([e, ""])).join("")}</div>` : ""}
     ${l.repere ? `<div class="callout info"><span class="k">Repère professionnel</span>${l.repere}</div>` : ""}
@@ -104,10 +107,12 @@ V.lesson = c => {
     <div class="card" style="padding:6px 16px">${(l.sent || []).slice(0, 8).map(exBtn).join("")}
       ${(l.sent || []).length > 8 ? `<details class="more" style="padding-bottom:10px"><summary>${l.sent.length - 8} de plus</summary>${l.sent.slice(8).map(exBtn).join("")}</details>` : ""}</div>
     ${reads.length ? sec("Lire en contexte") + group(reads.map(x => row("go", "📖", esc(x.t), `${x.lvl} · ${x.kind || "texte"}`, "", `data-v="read" data-id="${x.id}"`, "t-green"))) : ""}`,
-    after: () => { AUD.prefetch("L-" + l.id); if (l.doc && l.doc.q) QF = { id: "doc", qs: l.doc.q.map(q => [q[0], q[1], q[2], q[3] || ""]), onScore: () => {} }; }
+    after: () => { AUD.prefetch("L-" + l.id); if (l.doc && l.doc.q) QF = { id: "doc", qs: docQs(l), onScore: () => {} }; }
   };
 };
-A.enToggle = () => { const rc = $("#rc"); if (rc) rc.classList.toggle("en-on"); };
+A.enToggle = () => { const rc = $("#rc"); if (rc) { rc.classList.toggle("en-on"); S.set.en = rc.classList.contains("en-on"); save(); } };
+A.docEn = (d, el) => { const c = el.closest(".doc"); if (c) { c.classList.toggle("tr-on"); el.classList.toggle("on"); } };
+const docQs = l => l.doc.q.map(q => [q[0], q[1], q[2], q[3] || "", undefined, typeof docQEn === "function" ? docQEn(l, q) : ""]);
 A.docPlay = d => {
   const l = LESSON[d.id]; if (!l || !l.doc) return;
   TTS.play(l.doc.d.map(p => Array.isArray(p) ? [p[0], plain(p[1])] : ["", plain(p)]));

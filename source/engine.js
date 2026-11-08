@@ -31,24 +31,25 @@ function sameLessonFirst(l, right, field) {
   return [...pick(own, 3), ...pick(other, 3)].slice(0, 3);
 }
 const Q = {
-  rec(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", k: "Que veut dire… ?", prompt: `<div class="qp">${esc(c.fr)}</div>`, audio: c.fr, ...o, why: c.exfr ? `${c.exfr}<br><span class="en">${esc(c.exen)}</span>` : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
-  recall(l, c) { const o = optsFrom(c.fr, sameLessonFirst(l, c.fr, "fr")); return { t: "mc", k: "En français", prompt: `<div class="qp en" style="font-style:italic">${esc(c.en)}</div>`, ...o, why: c.exfr ? esc(c.exfr) : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
-  listen(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", k: "Écoutez", prompt: `<div class="muted small" style="text-align:center">Écoutez et choisissez le sens</div>`, play: c.fr, ...o, why: `<b>${esc(c.fr)}</b>`, hear: c.fr, cat: "écoute", ik: c.key, lid: l.id, ck: c.key }; },
-  listenS(l, s, k) { const pool = (l.sent || []).filter(x => x[0] !== s[0]).map(x => x[1]); const o = optsFrom(s[1], pool.length >= 3 ? pool : [...pool, ...poolEn(l)]); return { t: "mc", k: "Écoutez", prompt: `<div class="muted small" style="text-align:center">Écoutez et choisissez le sens</div>`, play: s[0], ...o, why: `<b>${esc(s[0])}</b>`, hear: s[0], cat: "écoute", ik: k, lid: l.id }; },
+  rec(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", kind: "rec", tr: c.en + (c.exfr ? ` — « ${c.exfr} » = ${c.exen}` : ""), answ: c.fr, k: "Que veut dire… ?", prompt: `<div class="qp">${esc(c.fr)}</div>`, audio: c.fr, ...o, why: c.exfr ? `${c.exfr}<br><span class="en">${esc(c.exen)}</span>` : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
+  recall(l, c) { const o = optsFrom(c.fr, sameLessonFirst(l, c.fr, "fr")); return { t: "mc", kind: "recall", tr: c.en + (c.exfr ? ` — « ${c.exfr} » = ${c.exen}` : ""), answ: c.fr, k: "En français", prompt: `<div class="qp en" style="font-style:italic">${esc(c.en)}</div>`, ...o, why: c.exfr ? esc(c.exfr) : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
+  listen(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", kind: "listen", tr: c.en, answ: c.fr, k: "Écoutez", prompt: `<div class="muted small" style="text-align:center">Écoutez et choisissez le sens</div>`, play: c.fr, ...o, why: `<b>${esc(c.fr)}</b>`, hear: c.fr, cat: "écoute", ik: c.key, lid: l.id, ck: c.key }; },
+  listenS(l, s, k) { const pool = (l.sent || []).filter(x => x[0] !== s[0]).map(x => x[1]); const o = optsFrom(s[1], pool.length >= 3 ? pool : [...pool, ...poolEn(l)]); return { t: "mc", kind: "listen", tr: s[1], answ: s[0], k: "Écoutez", prompt: `<div class="muted small" style="text-align:center">Écoutez et choisissez le sens</div>`, play: s[0], ...o, why: `<b>${esc(s[0])}</b>`, hear: s[0], cat: "écoute", ik: k, lid: l.id }; },
   match(l, cs) { return { t: "match", k: "Associez les paires", pairs: cs.map(c => [c.fr, c.en]), cat: "lexique", lid: l.id, ik: l.id + "#match" }; },
-  nat(l, x, k) { const o = optsFrom(x[0], [x[1]], 1); return { t: "mc", k: "Quelle phrase est correcte ?", prompt: `<div class="muted small">Choisissez la phrase qu'un francophone écrirait.</div>`, ...o, why: x[2], hear: x[0], cat: l.cat, ik: k, lid: l.id }; },
-  mcq(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", k: "Choisissez", prompt: `<div class="qs">${fmtBlank(x[0])}</div>`, ...o, why: x[3] || "", hear: /_{2,}/.test(x[0]) ? fillBlank(x[0], x[1]) : x[1], cat: l.cat, ik: k, lid: l.id }; },
-  gapC(l, x, k) { const right = x[1].split("|")[0]; const o = optsFrom(right, x[4] || [], 3); return { t: "mc", k: "Complétez", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, ...o, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id }; },
-  gapT(l, x, k) { const right = x[1].split("|")[0]; return { t: "type", k: "Écrivez le mot manquant", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, acc: x[1], model: right, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id, short: true }; },
-  fix(l, x, k) { return { t: "fix", k: "Trouvez l'erreur", s: x[0], bad: x[1], good: x[2], why: x[3], opts: shuffle([x[2], ...(x[4] || [])]), hear: x[0].replace(x[1], x[2]), cat: l.cat, ik: k, lid: l.id }; },
-  build(l, s, k) { return { t: "build", k: "Construisez la phrase", en: s[1], words: shuffle(tokenize(s[0])), ans: s[0], hear: s[0], cat: "syntaxe", ik: k, lid: l.id }; },
-  trans(l, x, k) { return { t: "type", k: "Transformez", prompt: `<div class="muted small">${esc(x[0])}</div><div class="qs">${esc(x[1])}</div>`, acc: x[2], model: x[2].split("|")[0], why: "", hear: x[2].split("|")[0], self: true, cat: l.cat, ik: k, lid: l.id }; },
-  chat(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", k: "Répondez", prompt: `<div class="chatb"><div><div class="who">On vous dit</div><div class="bub">${esc(x[0])}</div></div></div><div class="muted small">Choisissez la meilleure réponse.</div>`, audio: x[0], ...o, why: x[3] || "", hear: x[1], cat: "interaction", ik: k, lid: l.id }; },
-  dict(l, s, k) { return { t: "type", k: "Dictée", prompt: `<div class="muted small" style="text-align:center">Écoutez et écrivez ce que vous entendez</div>`, play: s[0], acc: s[0], model: s[0], why: `<span class="en">${esc(s[1])}</span>`, hear: s[0], self: true, long: true, cat: "orthographe", ik: k, lid: l.id }; },
-  tr(l, s, k) { return { t: "type", k: "Traduisez en français", prompt: `<div class="qp en" style="font-style:italic">${esc(s[1])}</div>`, acc: s[0], model: s[0], why: "", hear: s[0], self: true, long: true, cat: l.cat, ik: k, lid: l.id }; },
+  nat(l, x, k) { const o = optsFrom(x[0], [x[1]], 1); return { t: "mc", kind: "nat", answ: x[0], bad: x[1], k: "Quelle phrase est correcte ?", prompt: `<div class="muted small">Choisissez la phrase qu'un francophone écrirait.</div>`, ...o, why: x[2], hear: x[0], cat: l.cat, ik: k, lid: l.id }; },
+  mcq(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", answ: x[1], k: "Choisissez", prompt: `<div class="qs">${fmtBlank(x[0])}</div>`, ...o, why: x[3] || "", hear: /_{2,}/.test(x[0]) ? fillBlank(x[0], x[1]) : x[1], cat: l.cat, ik: k, lid: l.id }; },
+  gapC(l, x, k) { const right = x[1].split("|")[0]; const o = optsFrom(right, x[4] || [], 3); return { t: "mc", answ: right, hint: x[2] || "", tr: x[3] || "", k: "Complétez", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, ...o, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id }; },
+  gapT(l, x, k) { const right = x[1].split("|")[0]; return { t: "type", answ: right, hint: x[2] || "", tr: x[3] || "", k: "Écrivez le mot manquant", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, acc: x[1], model: right, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id, short: true }; },
+  fix(l, x, k) { return { t: "fix", whyEn: fixEn(l, x), k: "Trouvez l'erreur", s: x[0], bad: x[1], good: x[2], why: x[3], opts: shuffle([x[2], ...(x[4] || [])]), hear: x[0].replace(x[1], x[2]), cat: l.cat, ik: k, lid: l.id }; },
+  build(l, s, k) { return { t: "build", tr: s[1], answ: s[0], k: "Construisez la phrase", en: s[1], words: shuffle(tokenize(s[0])), ans: s[0], hear: s[0], cat: "syntaxe", ik: k, lid: l.id }; },
+  trans(l, x, k) { return { t: "type", answ: x[2].split("|")[0], k: "Transformez", prompt: `<div class="muted small">${esc(x[0])}</div><div class="qs">${esc(x[1])}</div>`, acc: x[2], model: x[2].split("|")[0], why: "", hear: x[2].split("|")[0], self: true, cat: l.cat, ik: k, lid: l.id }; },
+  chat(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", answ: x[1], k: "Répondez", prompt: `<div class="chatb"><div><div class="who">On vous dit</div><div class="bub">${esc(x[0])}</div></div></div><div class="muted small">Choisissez la meilleure réponse.</div>`, audio: x[0], ...o, why: x[3] || "", hear: x[1], cat: "interaction", ik: k, lid: l.id }; },
+  dict(l, s, k) { return { t: "type", tr: s[1], k: "Dictée", prompt: `<div class="muted small" style="text-align:center">Écoutez et écrivez ce que vous entendez</div>`, play: s[0], acc: s[0], model: s[0], why: `<span class="en">${esc(s[1])}</span>`, hear: s[0], self: true, long: true, cat: "orthographe", ik: k, lid: l.id }; },
+  tr(l, s, k) { return { t: "type", tr: s[1], k: "Traduisez en français", prompt: `<div class="qp en" style="font-style:italic">${esc(s[1])}</div>`, acc: s[0], model: s[0], why: "", hear: s[0], self: true, long: true, cat: l.cat, ik: k, lid: l.id }; },
   write(l) { const p = l.prod; return { t: "write", k: "Production écrite", c: p.c, n: p.n, model: p.m, crit: p.k || [], cat: "écrit", ik: l.id + "#prod", lid: l.id, norep: true }; },
-  speak(l, s, k) { return { t: "speak", k: "Dites-le à voix haute", text: s[0], en: s[1], hear: s[0], cat: "oral", ik: k, lid: l.id }; }
+  speak(l, s, k) { return { t: "speak", tr: s[1], k: "Dites-le à voix haute", text: s[0], en: s[1], hear: s[0], cat: "oral", ik: k, lid: l.id }; }
 };
+function fixEn(l, x) { const e = EN[l.id], fx = e && e.fx; if (!fx) return ""; const i = l.fix.indexOf(x), b = l.fix.length - fx.length; return i >= b ? fx[i - b] || "" : ""; }
 function fmtBlank(s) { return esc(s).replace(/_{2,}/g, '<span class="blank">?</span>'); }
 function fillBlank(s, a) { return String(s).replace(/_{2,}/, a).replace(/\s*\([^)]*\)/g, "").trim(); }
 function gapWhy(l, x) { return x[5] || (l.rule && l.rule.h ? esc(l.rule.h) : ""); }
@@ -180,10 +181,7 @@ function renderQ() {
       <div class="row between"><span class="muted small" id="wc">0 mot</span></div>
       <div id="wrtOut"></div><div class="checkbar"><button class="btn primary block" data-a="writeShow">Voir le modèle et m'évaluer</button></div>`;
   } else if (q.t === "speak") {
-    body = `${head}<div class="qp">${esc(q.text)}</div><div class="qen">${esc(q.en)}</div><div class="row" style="margin:12px 0">${spkBtn(q.text)}<button class="btn sm ghost" data-a="say" data-t="${esc(q.text)}" data-slow="1">Plus lent</button></div>
-      <button class="bigplay rec" data-a="speakGo" aria-label="Speak">${IC.mic.replace("<svg", '<svg style="fill:none;stroke:currentColor;stroke-width:2"')}</button>
-      <div id="spkOut" class="muted small" style="text-align:center">${SR ? "Touchez le micro et lisez la phrase à voix haute." : "Votre navigateur ne peut pas vérifier la prononciation. Écoutez, répétez à voix haute, puis évaluez-vous."}</div>
-      <div class="row" style="justify-content:center;margin-top:14px"><button class="btn sm" data-a="selfRate" data-ok="1">Je l'ai bien dit</button><button class="btn sm ghost" data-a="selfRate" data-ok="0">Pas encore</button></div>`;
+    body = `${head}<div class="muted small" style="margin-bottom:8px">Écoutez le modèle, enregistrez-vous, puis comparez.</div><div id="pronq"></div>`;
   }
   $("#stage").innerHTML = `<div class="fade">${sessTop()}${body}</div>`;
   if (q.t === "match") {
@@ -193,6 +191,7 @@ function renderQ() {
   const wr = $("#wrt"); if (wr) { const upd = () => { const n = (wr.value.match(/[\p{L}\p{N}'’-]+/gu) || []).length; $("#wc").textContent = n + (n > 1 ? " mots" : " mot"); }; wr.addEventListener("input", upd); }
   const inp = $("#ans"); if (inp) { inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); A.checkType(); } }); setTimeout(() => inp.focus({ preventScroll: true }), 60); }
   if (q.play) setTimeout(() => say(q.play), 250);
+  if (q.t === "speak") mountLab("#pronq", { text: q.text, en: q.en, lid: q.lid, onDone: (ok, heard) => { if (!SS.answered) answer(ok, { given: heard, right: q.text }); } });
   scrollTo(0, 0);
 }
 A.writeShow = () => {
@@ -317,6 +316,7 @@ function showFb(ok, o) {
       <div class="muted small">Votre réponse</div><div class="ans" style="font-weight:500">${esc(o.given)}</div>
       <div class="muted small" style="margin-top:6px">Modèle ${o.sim != null ? `· ${Math.round(o.sim * 100)} % de mots en commun` : ""}</div><div class="ans">${esc(q.model)}</div>
       ${q.why ? `<div class="why">${q.why}</div>` : ""}
+      ${typeof explainEn === "function" ? explainEn(q, false, o) : ""}
       <div class="row" style="margin-top:10px">${spkBtn(q.hear || q.model)}<button class="btn primary" style="flex:1" data-a="selfFb" data-ok="1">Ma réponse est juste aussi</button><button class="btn" style="flex:1" data-a="selfFb" data-ok="0">Je me suis trompée</button></div>`;
     fb.className = "sheet-fb on";
   } else {
@@ -326,6 +326,7 @@ function showFb(ok, o) {
       ${showAns && o.right ? `<div class="ans">${esc(o.right)}</div>` : ""}
       ${!ok && o.given && q.t !== "mc" ? `<div class="muted small">Votre réponse : ${esc(o.given)}</div>` : ""}
       ${q.why ? `<div class="why">${q.why}</div>` : ""}
+      ${typeof explainEn === "function" ? explainEn(q, ok, o) : ""}
       <div class="row" style="margin-top:10px">${q.hear ? spkBtn(q.hear) : ""}<button class="btn primary" style="flex:1" data-a="next">Continuer →</button></div>`;
     fb.className = "sheet-fb on " + (ok ? "ok" : "no");
   }

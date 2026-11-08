@@ -1,7 +1,7 @@
-/* Pas à pas · v3.0 */
-const CACHE = "pas-a-pas-v3-0";
+/* Pas à pas · v4.0 */
+const CACHE = "pas-a-pas-v4-0";
 const AUDIO = "pas-a-pas-audio";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./logo.png", "./favicon.ico", "./favicon-32.png", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png",
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./logo.png", "./favicon.ico", "./favicon-32.png", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./ipa.json",
   "./fonts/bvp-Regular.woff2", "./fonts/bvp-Medium.woff2", "./fonts/bvp-SemiBold.woff2", "./fonts/bvp-Bold.woff2", "./fonts/fraunces.woff2", "./fonts/newsreader-italic.woff2"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== AUDIO).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

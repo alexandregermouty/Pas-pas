@@ -75,6 +75,7 @@ function suggestion() {
     { ic: "✍️", t: "Dictée", s: "Six phrases, accents compris", a: "dictStart" },
     { ic: "📖", t: "Lecture", s: "Un texte à votre niveau, avec des questions", a: "go", data: 'data-v="readList"' },
     { ic: "🎙️", t: "Parler une minute", s: "Un sujet, un chrono et votre enregistrement", a: "go", data: 'data-v="speakList"' },
+    { ic: "🗣️", t: "Prononciation", s: "Enregistrez-vous et comparez avec le modèle", a: "go", data: 'data-v="pronList"' },
     { ic: "🔗", t: "Connecteurs", s: "Les mots qui structurent un argument", a: "connStart" },
     { ic: "🔢", t: "Nombres", s: "Prix, heures, numéros de téléphone", a: "numStart" },
     { ic: "🎩", t: "Registres", s: "Familier, courant, soutenu", a: "regStart" }

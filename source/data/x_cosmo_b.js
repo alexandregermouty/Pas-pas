@@ -367,7 +367,7 @@ P("co-d8l1", {
     w: "Après un superlatif + que, on emploie le subjonctif : <i>le plus beau film que j'aie vu</i>." },
   v: [{ k: "sch", t: "De l'appréciation à l'enthousiasme", s: ["c'est pas mal", "c'est beau", "c'est magnifique", "c'est absolument bouleversant !"] }],
   doc: { k: "Critique", t: "Une exposition à ne pas manquer", d: [
-      "Courez au musée de l'Orangerie ! L'exposition consacrée à la peintre vietnamienne Lê Phổ est *la plus émouvante que j'aie vue* cette année.",
+      "Courez au musée de l'Orangerie ! L'exposition consacrée au peintre vietnamien Lê Phổ est *la plus émouvante que j'aie vue* cette année.",
       "Ses tableaux, peints sur soie, *ressemblent à* des rêves : des femmes en áo dài lisent ou cueillent des fleurs dans des jardins lumineux. *On dirait* que le temps s'est arrêté. L'artiste, formé à Hanoï puis installé à Paris, peignait *à la manière des* maîtres européens tout en gardant une sensibilité asiatique.",
       "La dernière salle est *absolument époustouflante* : une immense toile aux couleurs dorées occupe tout un mur. Allez-y, vous ne serez pas déçus !"],
     q: [["Où se trouve l'exposition ?", "Au musée de l'Orangerie", ["Au Louvre", "Au musée d'Orsay", "À Hanoï"], "« Courez au musée de l'Orangerie ! »"],

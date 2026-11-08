@@ -10,7 +10,9 @@ order = ["core.js", "data/levels.js", "data/verbs.js", "data/practice.js"] + \
     sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "cosmo*.js"))) + \
     sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "oe*.js"))) + ["data/courses.js", "data/plus.js"] + \
     sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "x_*.js"))) + \
-    ["data/fr_mcq.js", "data/fr_xf.js", "data/texts.js", "data/fr_texts.js", "data/exams.js", "engine.js", "views.js", "tools.js", "exam.js", "lesson.js", "main.js"]
+    ["data/fr_mcq.js", "data/fr_xf.js", "data/texts.js", "data/fr_texts.js", "data/exams.js", "data/en_base.js"] + \
+    sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "en_*.js")) if not p.endswith("en_base.js")) + \
+    ["engine.js", "explain.js", "pron.js", "views.js", "tools.js", "exam.js", "lesson.js", "main.js"]
 js = []
 for f in order:
     p = os.path.join(SRC, f)

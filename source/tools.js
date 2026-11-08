@@ -29,7 +29,8 @@ V.practice = () => {
       row("faStart", "⚠️", "Faux amis", "Actuellement ne veut pas dire actually", best("fa"), "", "t-red"),
       row("idStart", "💬", "Expressions", "Les expressions vraiment utilisées", best("id"), "", "t-green")])}
     ${sec("Parler et écrire", "Production")}
-    ${group([row("go", "🎙️", "Parler une minute", "Un sujet, un chrono, votre enregistrement", "", 'data-v="speakList"', "t-red"),
+    ${group([row("go", "🗣️", "Prononciation", "Écouter, s'enregistrer, comparer — avec score", "", 'data-v="pronList"', "t-violet"),
+      row("go", "🎙️", "Parler une minute", "Un sujet, un chrono, votre enregistrement", "", 'data-v="speakList"', "t-red"),
       row("go", "📝", "Écrire", "Sujets d'examen avec chrono et grille", "", 'data-v="exam" data-lv="' + S.level + '"', "t-blue")])}`
   };
 };
@@ -39,7 +40,7 @@ function quizForm(id, qs, prev) {
   return `<form id="qf" onsubmit="return false">${qs.map((q, i) => {
     const opts = q._o || (q._o = shuffle([q[1], ...q[2]]));
     return `<div class="card flat" data-q="${i}"><div style="font-weight:600;margin-bottom:8px">${i + 1}. ${esc(q[0])}${q[4] ? ` <span class="muted tiny">· ${q[4]} pt${q[4] > 1 ? "s" : ""}</span>` : ""}</div>
-      ${opts.map((o, j) => `<label class="chk"><input type="radio" name="q${i}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("")}<div class="why small muted hide" style="margin-top:6px">${q[3] ? esc(q[3]) : ""}</div></div>`;
+      ${opts.map((o, j) => `<label class="chk"><input type="radio" name="q${i}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("")}<div class="why small muted hide" style="margin-top:6px">${q[3] ? esc(q[3]) : ""}${q[5] ? `<div class="xwrap">${q[5]}</div>` : ""}</div></div>`;
   }).join("")}</form><button class="btn primary block" data-a="quizCheck" data-id="${id}">Vérifier mes réponses</button>`;
 }
 let QF = null; // {id, qs, onScore}

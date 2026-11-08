@@ -1,10 +1,10 @@
-# Pas à pas · v3.0
+# Pas à pas · v4.0
 
 Lan Anh's French-learning app: from B1 to B2 to C1, with practice for the DELF B1, DELF B2 and DALF C1 exams, companion lessons for her two class books, and natural recorded French voices.
 
 **Live app:** https://alexandregermouty.github.io/Pas-pas/
 
-It is built like *Ôn tiếng Việt*: one installable web app (PWA), no build step on GitHub Pages, progress stored on the phone. Lessons are written in French, with short English explanations you can show or hide.
+It is built like *Ôn tiếng Việt*: one installable web app (PWA), no build step on GitHub Pages, progress stored on the phone. Lessons are written in French; every rule and every answer comes with a detailed explanation in English.
 
 ## Install it on the iPhone
 
@@ -18,7 +18,22 @@ On Android: open the link in Chrome, then menu → **Install app**.
 
 Updates arrive by themselves: when a new version is pushed to GitHub, the app picks it up the next time it is opened online.
 
-## What's new in 3.0
+## What's new in 4.0
+
+- **An explanation in English after every answer.** Right or wrong, each exercise now opens an *Explanation* panel with:
+  - what the sentence means, when a translation exists;
+  - a grammar breakdown of the right answer (verb, tense, person, auxiliary, agreement) and of her own answer if it was wrong, saying why it does not fit;
+  - the part of the lesson that explains the rule behind it, with the whole lesson in English one tap away.
+- **Every lesson explained in English, in depth**: a new step, *Explained in English*, goes through each rule point (how it is built, when to use it, how it differs from English, the usual traps). The short English line under each French rule point is now shown by default.
+- **English translation of every lesson document** (tap **EN** above the text), and each comprehension answer shows the passage it comes from, in English.
+- **Atelier de prononciation**:
+  - Every example sentence has a 🎙️ button. Under each word, the sentence shows its phonetic transcription (IPA), with liaisons marked ‿.
+  - She listens to the model, records herself, and the phone's speech recognition checks each word (green / orange / red) and gives a score.
+  - *Comparer* plays the model, then her recording, and draws both side by side: rhythm (energy) and melody (pitch) on the same time scale.
+  - Tips in English explain the French sounds she needs to work on (R, u/ou, nasal vowels, silent letters, liaison, intonation).
+  - It is also a new tool in **Pratiquer → Prononciation**, and it replaces the old "speak" exercise in level 4.
+
+## What came in 3.0
 
 - **French first**: lessons, questions, answers, instructions and comprehension quizzes are now in French. English appears only as an optional help line under each rule (**EN** button) and in a few glosses.
 - **Fuller lessons**, in seven steps: ① objectifs → ② un document (a dialogue, article or e-mail to read and listen to, with a comprehension quiz) → ③ la règle, with visual aids (colour-coded formulas, tables, timelines, comparisons, arrows) → ④ exemples → ⑤ erreurs fréquentes → ⑥ vocabulaire → ⑦ s'entraîner.
@@ -56,6 +71,10 @@ Each lesson opens with its goals and a document to read and hear, then the rule 
 - **Examen**: DELF B1, DELF B2 and DALF C1 formats, method and mock tasks for all four papers.
 - **Moi**: progress by level and course, activity, error profile, "I can…" statements, settings.
 
+## Pronunciation check
+
+The score uses the speech recognition built into the phone (on iPhone, Siri's dictation must be enabled: Settings → General → Keyboard → Enable Dictation). It checks that each word can be understood; it does not grade every detail of the accent, which is why the lab also lets her compare her recording with the model by ear and on the drawing. If recognition is not available (some browsers, or no network), the lab still records and compares, and she rates herself. The phonetic transcriptions were produced with espeak-ng, the same phonemizer used by the Kokoro voice (`ipa.json`).
+
 ## Voices
 
 - **Main voice (female)**: *Kokoro* v1.0, French voice `ff_siwis` (Apache 2.0 model).
@@ -76,8 +95,9 @@ Progress is stored on the phone, in the browser. To move it to another device, u
 
 - `index.html`: the whole app (styles, scripts and lessons inlined).
 - `sw.js`: offline cache. `manifest.webmanifest`, icons, `fonts/`.
+- `ipa.json`: phonetic transcriptions for the pronunciation lab (built by `source/voice/ipa.py`).
 - `audio/`: recorded voice packs.
-- `source/`: readable sources. Lessons are in `source/data/` (`b1a.js` … `c1b.js`, `cosmo_a.js`, `cosmo_b.js`, `oe.js`, `courses.js`); the v3 documents, French rules, visuals and extra exercises are in `x_*.js`, and the French versions of older English strings in `fr_*.js`. Run `python3 build.py` inside `source` to rebuild `index.html`, then bump `CACHE` in `sw.js`.
+- `source/`: readable sources. Lessons are in `source/data/` (`b1a.js` … `c1b.js`, `cosmo_a.js`, `cosmo_b.js`, `oe.js`, `courses.js`); the v3 documents, French rules, visuals and extra exercises are in `x_*.js`, the French versions of older English strings in `fr_*.js`, and the English explanations (lesson in depth, document translations) in `en_*.js`. Run `python3 build.py` inside `source` to rebuild `index.html`, then bump `CACHE` in `sw.js`.
 - `source/voice/`: the scripts used to list every spoken sentence (`collect.*`), record it (`generate.py`) and build the packs (`pack.py`). New sentences without a recording simply use the phone's voice until they are recorded.
 
 ## Hosting on GitHub Pages

@@ -2,7 +2,7 @@
    Pas à pas · core — storage, audio, routing, helpers
    ═══════════════════════════════════════════════════════════════════ */
 "use strict";
-const APP_VERSION = "3.0";
+const APP_VERSION = "4.0";
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -273,7 +273,7 @@ function render() {
   out.after && out.after();
 }
 function openSheet(html) { $("#sheet").innerHTML = `<div class="row between" style="margin-bottom:8px"><button class="btn sm ghost" data-a="closeSheet">‹ Retour</button></div>` + html; $("#scrim").classList.add("on"); }
-function closeSheet() { $("#scrim").classList.remove("on"); TTS.stop(); return true; }
+function closeSheet() { $("#scrim").classList.remove("on"); TTS.stop(); if (typeof PR !== "undefined" && PR.cur) { if (PR.cur.recording) stopRec(true); if (PR.cur.player) PR.cur.player.pause(); if (PR.cur.sel === "#labbox") PR.cur = null; } return true; }
 
 /* ── activity log ────────────────────────────────────────────────── */
 function logAnswer(n = 1) { const k = dayKey(); S.days[k] = (S.days[k] || 0) + n; save(); }
