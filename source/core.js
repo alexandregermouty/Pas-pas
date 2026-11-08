@@ -2,7 +2,7 @@
    Pas à pas · core — storage, audio, routing, helpers
    ═══════════════════════════════════════════════════════════════════ */
 "use strict";
-const APP_VERSION = "4.0";
+const APP_VERSION = "4.1";
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

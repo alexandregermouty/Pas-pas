@@ -1,5 +1,5 @@
-/* Pas à pas · v4.0 */
-const CACHE = "pas-a-pas-v4-0";
+/* Pas à pas · v4.1 */
+const CACHE = "pas-a-pas-v4-1";
 const AUDIO = "pas-a-pas-audio";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./logo.png", "./favicon.ico", "./favicon-32.png", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./ipa.json",
   "./fonts/bvp-Regular.woff2", "./fonts/bvp-Medium.woff2", "./fonts/bvp-SemiBold.woff2", "./fonts/bvp-Bold.woff2", "./fonts/fraunces.woff2", "./fonts/newsreader-italic.woff2"];

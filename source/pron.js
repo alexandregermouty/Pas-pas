@@ -173,8 +173,9 @@ function labRender() {
       <div class="muted tiny" style="margin-top:6px">Sous chaque mot : sa prononciation en alphabet phonétique (API). Touchez un mot pour l'entendre seul.</div></div>
     <div class="recwrap">
       <button class="bigplay rec ${L.recording ? "on" : ""}" data-a="prRec" aria-label="${L.recording ? "Arrêter" : "Enregistrer"}">${L.recording ? '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>' : IC.mic.replace("<svg", '<svg style="fill:none;stroke:currentColor;stroke-width:2"')}</button>
-      <canvas id="prMeter" class="meter ${L.recording ? "" : "hide"}"></canvas>
-      <div class="muted small" style="text-align:center">${L.recording ? "Je vous écoute… lisez la phrase, puis touchez ■" : L.busy ? "Analyse…" : res ? "Touchez le micro pour réessayer" : "Écoutez le modèle, puis touchez le micro et lisez la phrase"}</div>
+      <canvas id="prMeter" class="meter ${L.recording && L.mode !== "sr" ? "" : "hide"}"></canvas>
+      <div class="muted small" style="text-align:center">${L.recording ? (L.mode === "rec" ? "J'enregistre votre voix… lisez la phrase, puis touchez ■" : "Je vous écoute… lisez la phrase, puis touchez ■") : L.busy ? "Analyse…" : res ? "Touchez le micro pour réessayer" : "Écoutez le modèle, puis touchez le micro et lisez la phrase"}</div>
+      ${SR ? `<button class="linkbtn tiny" data-a="prMode">${prSeq() ? "Mode en deux temps (score, puis enregistrement) · changer" : "Mode simultané (score et enregistrement) · changer"}</button>` : ""}
     </div>
     ${res ? labResult(L) : ""}
   </div>`;
@@ -198,8 +199,9 @@ function labResult(L) {
   return `<div class="card labres">
     ${sc != null ? `<div class="row" style="gap:14px;align-items:center"><div class="pscore ${sc >= 85 ? "ok" : sc >= 65 ? "mid" : "no"}">${sc}<small>%</small></div><div><div style="font-weight:700;font-size:17px">${verdict}</div><div class="muted small">J'ai entendu : « ${esc(r.heard)} »</div></div></div>
       <div class="muted tiny" style="margin-top:8px"><span class="lg ok"></span> bien reconnu <span class="lg near"></span> presque <span class="lg miss"></span> pas reconnu</div>`
-      : `<div style="font-weight:700">Écoutez et comparez</div><div class="muted small">${esc(r.why || "La reconnaissance vocale n'est pas disponible ici : comparez votre enregistrement avec le modèle, puis évaluez-vous.")}</div>`}
+      : `<div style="font-weight:700">${L.uUrl ? "Écoutez et comparez" : "Pas de score cette fois"}</div><div class="muted small">${esc(r.why || "La reconnaissance vocale n'est pas disponible ici : comparez votre enregistrement avec le modèle, puis évaluez-vous.")}${r.code ? ` <span class="tiny">(${esc(r.code)})</span>` : ""}</div>`}
     <div class="qk" style="margin-top:14px">Comparer</div>
+    ${prSeq() ? `<button class="btn block ${L.uUrl ? "" : "primary"}" data-a="prRec" data-m="rec" style="margin-bottom:8px">${L.recording && L.mode === "rec" ? "■ Arrêter l'enregistrement" : `🎙️ ${L.uUrl ? "Réenregistrer ma voix" : "Enregistrer ma voix"} pour comparer`}</button>` : ""}
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm" data-a="prPlay" data-w="m">${IC.play} Modèle</button><button class="btn sm" data-a="prPlay" data-w="u" ${L.uUrl ? "" : "disabled"}>${IC.play} Vous</button><button class="btn sm primary" data-a="prPlay" data-w="mu" ${L.uUrl ? "" : "disabled"}>${IC.play} Modèle puis vous</button></div>
     ${L.mA || L.uA ? `<canvas id="prCv" class="prcv"></canvas><div class="muted tiny">Barres : l'énergie de la voix (le rythme). Points : la mélodie (l'intonation), mesurée par rapport à la hauteur moyenne de chaque voix.</div>` : ""}
   </div>
@@ -254,37 +256,60 @@ A.pron = d => {
 };
 const labList = l => uniq([...(l.rule && l.rule.ex || []), ...(l.sent || []), ...((l.sons && l.sons.ex) || []).map(e => [e, ""])].map(e => JSON.stringify([plain(e[0]), e[1] || ""]))).map(s => JSON.parse(s)).filter(e => prToks(e[0]).length <= 25);
 A.prNav = d => { const L = PR.cur; if (!L || !L.list) return; const i = Math.max(0, Math.min(L.list.length - 1, L.i + +d.d)); TTS.stop(); openLab({ text: L.list[i][0], en: L.list[i][1], lid: L.lid, list: L.list, i, sel: L.sel, onDone: L.onDone }); };
-A.prRec = async () => {
-  const L = PR.cur; if (!L || L.busy) return;
-  if (L.recording) return stopRec();
-  TTS.stop(); if (L.player) { L.player.pause(); L.player = null; }
-  if (!navigator.mediaDevices || !window.MediaRecorder) { toast("L'enregistrement n'est pas disponible dans ce navigateur"); return; }
-  L.alts = []; L.srErr = null; L.res = null; L.st = null;
-  // start recognition first, while we are still inside the tap
-  if (SR) {
-    try {
-      const r = L.sr = new SR(); r.lang = "fr-FR"; r.interimResults = false; r.maxAlternatives = 5; r.continuous = false;
-      r.onresult = e => { for (const res of e.results) if (res.isFinal || true) L.alts = Array.from(res).map(a => a.transcript); };
-      r.onerror = e => { L.srErr = e.error; };
-      r.onend = () => { L.srEnded = true; if (L.recording) setTimeout(() => { if (PR.cur === L && L.recording) stopRec(); }, 350); };
-      L.srEnded = false; r.start();
-    } catch (e) { L.srErr = "start"; }
-  }
+/* Recording and recognition.
+   "both": one tap records the voice AND runs speech recognition (desktop, most phones).
+   Some phones (often Android) cannot share the microphone between the two: then we switch
+   to two steps — the mic button gives the score (recognition only), and a second button
+   records the voice for the comparison. The choice is remembered in S.set.prSeq. */
+const prSeq = () => !!(S.set && S.set.prSeq);
+function startSR(L, onEnd) {
+  if (!SR) return false;
+  try {
+    const r = L.sr = new SR(); r.lang = "fr-FR"; r.interimResults = false; r.maxAlternatives = 5; r.continuous = false;
+    r.onresult = e => { for (const res of e.results) L.alts = Array.from(res).map(a => a.transcript); };
+    r.onerror = e => { L.srErr = e.error; };
+    r.onend = () => { L.srEnded = true; onEnd && onEnd(); };
+    L.srEnded = false; r.start(); return true;
+  } catch (e) { L.srErr = "start"; return false; }
+}
+async function startMic(L) {
+  if (!navigator.mediaDevices || !window.MediaRecorder) { toast("L'enregistrement n'est pas disponible dans ce navigateur"); return false; }
   try { L.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-  catch (e) { toast("L'accès au micro a été refusé"); try { L.sr && L.sr.abort(); } catch (x) { } return; }
+  catch (e) { toast("L'accès au micro a été refusé"); return false; }
   L.chunks = []; L.mr = new MediaRecorder(L.stream);
   L.mr.ondataavailable = e => e.data.size && L.chunks.push(e.data);
   L.mr.start();
-  try { const ac = prAC(); ac.resume && ac.resume(); const src = ac.createMediaStreamSource(L.stream); L.an = ac.createAnalyser(); L.an.fftSize = 1024; src.connect(L.an); } catch (e) { }
+  try { const ac = prAC(); ac.resume && ac.resume(); const src = ac.createMediaStreamSource(L.stream); L.an = ac.createAnalyser(); L.an.fftSize = 1024; src.connect(L.an); } catch (e) { L.an = null; }
+  return true;
+}
+A.prRec = async d => {
+  const L = PR.cur; if (!L || L.busy) return;
+  if (L.recording) return stopRec();
+  TTS.stop(); if (L.player) { L.player.pause(); L.player = null; }
+  const mode = d && d.m === "rec" ? "rec" : prSeq() && SR ? "sr" : "both";
+  L.mode = mode;
+  if (mode !== "rec") { L.alts = []; L.srErr = null; L.res = null; L.st = null; }
+  if (mode === "sr") {
+    // recognition only: the score
+    if (!startSR(L, () => { if (PR.cur === L && L.recording) { L.recording = false; clearTimeout(L.timer); finishLab(L); } })) { toast("La reconnaissance vocale n'est pas disponible"); return; }
+    L.recording = true; L.an = null;
+    L.timer = setTimeout(() => { try { L.sr.stop(); } catch (e) { } }, Math.max(7, prToks(L.text).length * .9 + 4) * 1000);
+    return labRender();
+  }
+  // start recognition first, while we are still inside the tap
+  if (mode === "both") startSR(L, () => { if (L.recording) setTimeout(() => { if (PR.cur === L && L.recording) stopRec(); }, 350); });
+  if (!(await startMic(L))) { try { L.sr && L.sr.abort(); } catch (x) { } return; }
   L.recording = true; L.t0 = Date.now();
   const max = Math.max(6, prToks(L.text).length * .9 + 3) * 1000;
   L.timer = setTimeout(() => { if (PR.cur === L && L.recording) stopRec(); }, max);
   labRender();
 };
+A.prMode = () => { S.set.prSeq = !prSeq(); save(); toast(prSeq() ? "Mode en deux temps : score, puis enregistrement" : "Mode simultané : score et enregistrement en une fois"); labRender(); };
 function stopRec(silent) {
   const L = PR.cur; if (!L || !L.recording) return;
   L.recording = false; clearTimeout(L.timer); cancelAnimationFrame(meterRAF);
-  try { L.sr && !L.srEnded && L.sr.stop(); } catch (e) { }
+  if (L.mode === "sr") { if (silent) { try { L.sr.abort(); } catch (e) { } return; } L.busy = true; labRender(); try { L.sr.stop(); } catch (e) { } setTimeout(() => { if (L.busy) finishLab(L); }, 2500); return; }
+  try { L.sr && L.mode === "both" && !L.srEnded && L.sr.stop(); } catch (e) { }
   if (silent) { try { L.mr.stop(); } catch (e) { } L.stream && L.stream.getTracks().forEach(t => t.stop()); return; }
   L.busy = true; labRender();
   L.mr.onstop = async () => {
@@ -293,6 +318,7 @@ function stopRec(silent) {
     if (L.uUrl) URL.revokeObjectURL(L.uUrl);
     L.uUrl = URL.createObjectURL(blob);
     try { L.uA = analyse(await decodeAB(await blob.arrayBuffer())); } catch (e) { L.uA = null; }
+    if (L.mode === "rec") { L.busy = false; if (PR.cur === L) labRender(); return; }
     // wait a moment for the last recognition result
     const t0 = Date.now(); while (SR && L.sr && !L.srEnded && Date.now() - t0 < 2500) await new Promise(r => setTimeout(r, 120));
     finishLab(L);
@@ -308,7 +334,16 @@ function finishLab(L) {
     S.pron = S.pron || {}; const k = prKey(L.text); S.pron[k] = Math.max(S.pron[k] || 0, best.score); save();
   } else {
     L.st = null;
-    L.res = { score: null, why: !SR ? "La reconnaissance vocale n'est pas disponible dans ce navigateur : comparez votre enregistrement avec le modèle, puis évaluez-vous." : L.srErr === "not-allowed" || L.srErr === "service-not-allowed" ? "La reconnaissance vocale a été refusée (Réglages de l'iPhone → Safari → Micro, et Dictée activée). Comparez votre enregistrement avec le modèle, puis évaluez-vous." : "Je n'ai pas pu reconnaître la phrase. Comparez votre enregistrement avec le modèle, puis évaluez-vous — ou réessayez plus près du micro." };
+    const e = L.srErr, denied = e === "not-allowed" || e === "service-not-allowed", net = e === "network";
+    // the voice was recorded but recognition heard nothing: the phone cannot do both at once
+    const conflict = L.mode === "both" && SR && !denied && !net && L.uA && L.uA.dur > .6;
+    if (conflict) { S.set.prSeq = true; save(); }
+    L.res = { score: null, code: e || "", why: !SR ? "La reconnaissance vocale n'est pas disponible dans ce navigateur : comparez votre enregistrement avec le modèle, puis évaluez-vous."
+      : denied ? "La reconnaissance vocale a été refusée. Autorisez le micro pour ce site (et, sur iPhone, activez la dictée : Réglages → Général → Clavier), puis réessayez."
+      : net ? "La reconnaissance vocale a besoin d'internet. Vérifiez la connexion, puis réessayez."
+      : conflict ? "Sur ce téléphone, le micro ne peut pas enregistrer votre voix et la reconnaître en même temps. J'ai activé le mode en deux temps : touchez le micro pour obtenir le score, puis « Enregistrer ma voix » pour comparer avec le modèle."
+      : L.mode === "sr" ? "Je n'ai rien entendu. Touchez le micro, attendez le signal, puis lisez la phrase un peu plus fort."
+      : "Je n'ai pas pu reconnaître la phrase. Comparez votre enregistrement avec le modèle, puis évaluez-vous — ou réessayez plus près du micro." };
   }
   if (PR.cur === L) labRender();
 }
