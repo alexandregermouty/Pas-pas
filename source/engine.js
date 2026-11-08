@@ -5,8 +5,8 @@
 /* ── lesson helpers ─────────────────────────────────────────────── */
 const LESSON = {};
 LESSONS.forEach((l, i) => { l.n = i; LESSON[l.id] = l; });
-const lvlLessons = lv => LESSONS.filter(l => l.lvl === lv);
-const trackOf = l => TRACKS[l.tr] || { t: l.tr, en: "" };
+const lvlLessons = lv => LESSONS.filter(l => l.lvl === lv && !l.course);
+const trackOf = l => TRACKS[l.tr] || (l.course ? { t: l.src || "", en: "" } : { t: l.tr, en: "" });
 const lessonCards = l => (l.cards || []).map((c, i) => ({ fr: c[0], en: c[1], exfr: c[2] || "", exen: c[3] || "", key: l.id + "#" + i, lid: l.id }));
 const allCardsOf = lv => LESSONS.filter(l => !lv || l.lvl === lv).flatMap(lessonCards);
 function stars(n) { n = n || 0; return `<span class="stars">${[1, 2, 3].map(i => i <= n ? "★" : "<i>★</i>").join("")}</span>`; }
@@ -96,6 +96,7 @@ function lessonQueue(l, mode) {
 function startSession(o) {
   if (!o.qs || !o.qs.length) { toast("Nothing to practise here yet"); return; }
   SS = Object.assign({ i: 0, res: [], wrong: [], repair: false, title: "Practice" }, o);
+  if (o.lid) AUD.prefetch("L-" + o.lid);
   document.body.classList.add("insession");
   renderQ();
 }
@@ -124,7 +125,7 @@ function renderQ() {
   const playBtn = q.play ? `<button class="bigplay" data-a="qplay" aria-label="Play">${IC.play}</button><button class="btn sm ghost slowbtn" data-a="qplay" data-slow="1">Slower</button>` : "";
   const audioBtn = q.audio ? `<div class="row" style="margin:6px 0">${spkBtn(q.audio)}</div>` : "";
   if (q.t === "mc") {
-    body = `${head}${q.prompt}${audioBtn}${playBtn}<div class="opts">${q.opts.map((o, i) => `<button class="opt" data-a="mc" data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
+    body = `${head}${q.prompt}${audioBtn}${playBtn}<div class="opts">${q.opts.map((o, i) => `<button class="opt" data-a="mc" data-i="${i}"><span class="l">${"ABCDEF"[i]}</span><span>${esc(o)}</span></button>`).join("")}</div>`;
   } else if (q.t === "type") {
     body = `${head}${q.prompt}${audioBtn}${playBtn}
       ${q.long ? `<textarea class="inp" id="ans" rows="3" autocapitalize="sentences" spellcheck="false" placeholder="Écris ici…"></textarea>` : `<input class="inp" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Écris ici…">`}
@@ -142,7 +143,7 @@ function renderQ() {
     body = `${head}<div class="muted small">Tap the word or words that are wrong.</div><div class="tiles bank" id="fixs">${toks.map((w, i) => `<button class="tk" data-a="fixTap" data-i="${i}">${esc(w)}</button>`).join("")}</div><div id="fixOpts"></div>`;
   } else if (q.t === "speak") {
     body = `${head}<div class="qp">${esc(q.text)}</div><div class="qen">${esc(q.en)}</div><div class="row" style="margin:12px 0">${spkBtn(q.text)}<button class="btn sm ghost" data-a="say" data-t="${esc(q.text)}" data-slow="1">Slower</button></div>
-      <button class="bigplay" data-a="speakGo" aria-label="Speak">${IC.mic.replace("<svg", '<svg style="fill:none;stroke:currentColor;stroke-width:2"')}</button>
+      <button class="bigplay rec" data-a="speakGo" aria-label="Speak">${IC.mic.replace("<svg", '<svg style="fill:none;stroke:currentColor;stroke-width:2"')}</button>
       <div id="spkOut" class="muted small" style="text-align:center">${SR ? "Tap the microphone and read the sentence aloud." : "Your browser cannot check speech. Listen, repeat aloud, then rate yourself."}</div>
       <div class="row" style="justify-content:center;margin-top:14px"><button class="btn sm" data-a="selfRate" data-ok="1">I said it well</button><button class="btn sm ghost" data-a="selfRate" data-ok="0">Not yet</button></div>`;
   }
@@ -200,7 +201,7 @@ A.fixTap = (d, el) => {
   const bads = badIdx(q.s, q.bad);
   if (bads.includes(i)) {
     SS.fixStage = 1; bads.forEach(j => $$("#fixs .tk")[j].classList.add("pick"));
-    $("#fixOpts").innerHTML = `<div class="muted small" style="margin-top:12px">Replace <b>${esc(q.bad)}</b> with:</div><div class="opts">${q.opts.map((o, j) => `<button class="opt" data-a="fixOpt" data-i="${j}">${esc(o)}</button>`).join("")}</div>`;
+    $("#fixOpts").innerHTML = `<div class="muted small" style="margin-top:12px">Replace <b>${esc(q.bad)}</b> with:</div><div class="opts">${q.opts.map((o, j) => `<button class="opt" data-a="fixOpt" data-i="${j}"><span class="l">${"ABCDEF"[j]}</span><span>${esc(o)}</span></button>`).join("")}</div>`;
   } else {
     el.classList.add("bad"); bads.forEach(j => $$("#fixs .tk")[j].classList.add("pick"));
     answer(false, { given: toks[i], right: q.s.replace(q.bad, q.good) });

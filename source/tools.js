@@ -10,35 +10,27 @@ V.practice = () => {
   const dueC = dueCards().length, dueL = LESSONS.filter(l => isDue(l.id)).length, weak = weakCards().length, mist = S.mistakes.filter(m => !m.soft).length;
   return {
     title: "Pratiquer", sub: "Every tool, by skill",
-    html: `<div class="hero" style="padding:18px"><div class="k">Suggestion du jour</div><h3 style="font-size:21px">${esc(sug.t)}</h3><p>${esc(sug.s)}</p><button class="btn primary" data-a="${sug.a}" ${sug.data || ""}>Start</button></div>
-    <h3 class="sec">Réviser · review</h3>
-    <div class="grid2">
-      ${tile("reviewCards", "🃏", "Cards due", dueC ? plural(dueC, "card", "cards") + " waiting" : "Nothing due")}
-      ${tile("reviewLessons", "↺", "Lesson review", dueL ? plural(dueL, "lesson", "lessons") + " due" : "None due")}
-      ${tile("reviewCards", "🩹", "Weak cards", weak ? plural(weak, "card", "cards") + " to rescue" : "None", 'data-weak="1"')}
-      ${tile("go", "📓", "Mistake notebook", plural(mist, "mistake", "mistakes") + " logged", 'data-v="notebook"')}
-    </div>
-    <h3 class="sec">Écouter et lire · listen and read</h3>
-    <div class="grid2">
-      ${tile("go", "🎧", "Listening", plural(LISTENINGS.length, "recording", "recordings") + " with questions", 'data-v="listenList"')}
-      ${tile("go", "📖", "Reading", plural(READINGS.length, "text", "texts") + " with questions", 'data-v="readList"')}
-      ${tile("dictStart", "✍️", "Dictation", "Hear a sentence, write it", "", best("dict"))}
-      ${tile("numStart", "🔢", "Numbers", "Prices, times, phone numbers", "", best("num"))}
-    </div>
-    <h3 class="sec">Grammaire et vocabulaire</h3>
-    <div class="grid2">
-      ${tile("go", "🔁", "Conjugation", "Every tense of your level", 'data-v="conj"', best("conj"))}
-      ${tile("connStart", "🔗", "Connectors", "Cause, concession, purpose…", "", best("conn"))}
-      ${tile("regStart", "🎩", "Register", "Familier · courant · soutenu", "", best("reg"))}
-      ${tile("faStart", "⚠️", "False friends", "Actuellement is not actually", "", best("fa"))}
-      ${tile("idStart", "💬", "Expressions", "Idioms people really use", "", best("id"))}
-      ${tile("go", "📚", "Verb tables", "Look up any verb", 'data-v="conjTable"')}
-    </div>
-    <h3 class="sec">Produire · speak and write</h3>
-    <div class="grid2">
-      ${tile("go", "🎙️", "Speak for a minute", "A topic, a timer, your recording", 'data-v="speakList"')}
-      ${tile("go", "📝", "Writing tasks", "Exam prompts with a timer and checklist", 'data-v="exam" data-lv="' + S.level + '"')}
-    </div>`
+    html: `<button class="lrow" data-a="${sug.a}" ${sug.data || ""} style="background:linear-gradient(135deg,#1F3E9C,#0E1D52);color:#fff;border:0;padding:16px"><div class="ic" style="background:rgba(255,255,255,.14)">${sug.ic}</div><div class="tx"><span style="color:rgba(255,255,255,.75);font-weight:700;font-size:12px">Suggestion du jour</span><b style="font-family:var(--disp);font-size:21px;font-weight:600">${esc(sug.t)}</b><span style="color:rgba(255,255,255,.8)">${esc(sug.s)}</span></div><span style="color:#fff">${IC.arrow}</span></button>
+    ${sec("Réviser", "Review")}
+    ${group([row("reviewCards", "🗂️", "Cartes à revoir", dueC ? plural(dueC, "card", "cards") + " waiting" : "Nothing due right now", dueC || "", "", "t-gold"),
+      row("reviewLessons", "↻", "Leçons à revoir", dueL ? plural(dueL, "lesson", "lessons") + " due" : "None due", dueL || "", "", "t-blue"),
+      row("reviewCards", "🩹", "Cartes difficiles", weak ? plural(weak, "card", "cards") + " to rescue" : "None", "", 'data-weak="1"', "t-red"),
+      row("go", "📓", "Carnet d'erreurs", plural(mist, "mistake", "mistakes") + " logged", "", 'data-v="notebook"', "t-violet")])}
+    ${sec("Écouter et lire", "Listening & reading")}
+    ${group([row("go", "🎧", "Écoute", plural(LISTENINGS.length, "recording", "recordings") + " · two voices", "", 'data-v="listenList"', "t-blue"),
+      row("go", "📖", "Lecture", plural(READINGS.length, "text", "texts") + " with questions", "", 'data-v="readList"', "t-green"),
+      row("dictStart", "✍️", "Dictée", "Hear a sentence, write it", best("dict"), "", "t-gold"),
+      row("numStart", "🔢", "Nombres", "Prices, times, phone numbers", best("num"), "", "t-orange")])}
+    ${sec("Grammaire et vocabulaire")}
+    ${group([row("go", "🔁", "Conjugaison", "Ten-verb sprint at your level", best("conj"), 'data-v="conj"', "t-blue"),
+      row("go", "📚", "Tableaux de verbes", "Every tense of 50 verbs", "", 'data-v="conjTable"', "t-violet"),
+      row("connStart", "🔗", "Connecteurs", "Cause, concession, purpose…", best("conn"), "", "t-teal"),
+      row("regStart", "🎩", "Registres", "Familier · courant · soutenu", best("reg"), "", "t-gold"),
+      row("faStart", "⚠️", "Faux amis", "Actuellement is not actually", best("fa"), "", "t-red"),
+      row("idStart", "💬", "Expressions", "Idioms people really use", best("id"), "", "t-green")])}
+    ${sec("Parler et écrire", "Speaking & writing")}
+    ${group([row("go", "🎙️", "Parler une minute", "A topic, a timer, your recording", "", 'data-v="speakList"', "t-red"),
+      row("go", "📝", "Écrire", "Exam prompts with a timer and checklist", "", 'data-v="exam" data-lv="' + S.level + '"', "t-blue")])}`
   };
 };
 
@@ -82,7 +74,7 @@ V.read = c => {
   const r = READINGS.find(x => x.id === c.id);
   QF = { id: r.id, qs: r.q, cat: "lecture", onScore: (g, m, sc) => bestSet("r:" + r.id, sc) };
   return {
-    title: "Lire", sub: r.lvl + " · " + (r.kind || "text"),
+    title: "Lire", sub: r.lvl + " · " + (r.kind || "text"), after: () => AUD.prefetch("R-" + r.id),
     html: `<h2 class="pg">${esc(r.t)}</h2>${r.src ? `<p class="pg-sub">${esc(r.src)}</p>` : ""}
     <div class="card reading">${r.paras.map(p => `<p data-a="say" data-t="${esc(p)}">${esc(p)}</p>`).join("")}<div class="muted tiny">Tap a paragraph to hear it.</div></div>
     ${r.gloss ? `<details class="more card flat"><summary>Vocabulary help</summary>${r.gloss.map(g => `<div class="small" style="padding:4px 0"><b>${esc(g[0])}</b> — <span class="en">${esc(g[1])}</span></div>`).join("")}</details>` : ""}
@@ -96,7 +88,6 @@ V.listenList = c => {
   return {
     title: "Écouter", sub: "Listening with questions",
     html: `<div class="seg">${LV.map(x => `<button aria-pressed="${x === lv}" data-a="subLv" data-lv="${x}">${x}</button>`).join("")}</div>
-    ${!TTS.fr.length ? `<div class="callout warn"><span class="k">No French voice</span>Add a French voice in your device's speech settings.</div>` : ""}
     ${LISTENINGS.filter(r => r.lvl === lv).map(r => row("go", r.exam ? "🎯" : "🎧", esc(r.t), `${esc(r.kind)} · ${plural(r.q.length, "question", "questions")}`, best("l:" + r.id), `data-v="listen" data-id="${r.id}"`)).join("")}`
   };
 };
@@ -106,13 +97,13 @@ V.listen = c => {
   LS = { id: r.id, plays: 0, max: exam ? (r.plays || 2) : 99 };
   QF = { id: r.id, qs: r.q, cat: "écoute", scale: exam ? null : null, onScore: (g, m, sc) => { bestSet("l:" + r.id, sc); if (exam) { S.exam[r.lvl + ":" + r.id] = { got: g, max: m, date: Date.now() }; save(); } $("#scr").classList.remove("hide"); } };
   return {
-    title: "Écouter", sub: r.lvl + " · " + r.kind,
+    title: "Écouter", sub: r.lvl + " · " + r.kind, after: () => AUD.prefetch("A-" + r.id),
     html: `<h2 class="pg">${esc(r.t)}</h2><p class="pg-sub">${esc(r.intro || "Read the questions first, then listen.")}</p>
-    <div class="card" style="text-align:center"><button class="bigplay" data-a="lsPlay">${IC.play}</button>
+    <div class="card" style="text-align:center"><button class="bigplay" data-a="lsPlay">${IC.play}</button><div class="muted tiny">${uniq(r.lines.map(x => x[0])).join(" · ")}</div>
       <div class="muted small" id="lsInfo">${exam ? `Exam conditions: ${r.plays || 2} listening${(r.plays || 2) > 1 ? "s" : ""}` : "Listen as many times as you like"}</div>
       <div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm ghost" data-a="lsStop">Stop</button>${!exam ? `<button class="btn sm ghost" data-a="lsPlay" data-slow="1">Slower</button>` : ""}</div></div>
     <h3 class="sec">Questions</h3>${quizForm(r.id, r.q)}<div id="qres"></div>
-    <div id="scr" class="${exam ? "hide" : ""}"><details class="more card flat"><summary>Transcript</summary><div class="script">${r.lines.map(l => `<div class="line" data-a="say" data-t="${esc(l[1])}"><b>${esc(l[0])}</b><span>${esc(l[1])}</span></div>`).join("")}</div></details></div>`
+    <div id="scr" class="${exam ? "hide" : ""}"><details class="more card flat"><summary>Transcript</summary><div class="script">${r.lines.map(l => `<div class="line" data-a="say" data-t="${esc(l[1])}" data-m="${MALE.has(l[0]) ? 1 : 0}"><b>${esc(l[0])}</b><span>${esc(l[1])}</span></div>`).join("")}</div></details></div>`
   };
 };
 A.lsPlay = d => {

@@ -6,10 +6,12 @@ function boot() {
   load(); applyTheme();
   matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", applyTheme);
   $("#nav").innerHTML = TABS.map(t => `<button role="tab" data-tab="${t.id}" aria-label="${esc(t.en)}">${t.ic}<span>${esc(t.fr)}</span></button>`).join("");
-  $("#backBtn").innerHTML = IC.back;
+  $("#backBtn").innerHTML = IC.back; hdrIcons();
   document.addEventListener("click", e => {
     const navB = e.target.closest("#nav button"); if (navB) { if (SS) A.quitSession(); closeSheet(); tab(navB.dataset.tab); return; }
     if (e.target.closest("#backBtn")) { back(); return; }
+    if (e.target.closest("#sndBtn")) { S.set.sound = !S.set.sound; save(); hdrIcons(); toast(S.set.sound ? "Sons activés" : "Sons coupés"); return; }
+    if (e.target.closest("#setBtn")) { if (SS) return; if (cur().view !== "settings") go("settings"); return; }
     if (e.target.id === "scrim") { closeSheet(); return; }
     const el = e.target.closest("[data-a]"); if (!el) return;
     if (el.tagName === "INPUT" && el.type === "checkbox") return;
@@ -23,6 +25,8 @@ function boot() {
   addEventListener("popstate", () => { if (back()) history.pushState({ armed: 1 }, ""); });
   addEventListener("pagehide", () => { if (SS) saveResume(); saveNow(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) { if (SS) saveResume(); saveNow(); } });
+  document.addEventListener("pointerdown", () => AUD.unlock(), { capture: true });
+  AUD.init();
   render();
   setTimeout(() => $("#splash").classList.add("off"), 250);
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => { });

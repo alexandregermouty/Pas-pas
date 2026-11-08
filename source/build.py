@@ -7,6 +7,8 @@ order = ["core.js", "data/levels.js", "data/verbs.js", "data/practice.js"] + \
     sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "b1*.js"))) + \
     sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "b2*.js"))) + \
     sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "c1*.js"))) + \
+    sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "cosmo*.js"))) + \
+    sorted(os.path.relpath(p, SRC) for p in glob.glob(os.path.join(SRC, "data", "oe*.js"))) + ["data/courses.js"] + \
     ["data/texts.js", "data/exams.js", "engine.js", "views.js", "tools.js", "exam.js", "main.js"]
 js = []
 for f in order:

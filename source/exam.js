@@ -103,7 +103,7 @@ V.examSpeak = c => {
     ${sec("Discussion with the jury")}${d.q.map(q => `<button class="ex" data-a="say" data-t="${esc(q)}"><span class="spk">${IC.spk}</span><span class="fr">${esc(q)}</span></button>`).join("")}`;
   }
   return {
-    title: E.name, sub: "Production orale",
+    title: E.name, sub: "Production orale", after: () => AUD.prefetch("X-" + c.lv),
     html: `<h2 class="pg">${esc(t.t)}</h2><p class="pg-sub">${esc(t.sub)}</p>${body}
     <div class="card flat"><b>Check against the exam criteria</b>${E.grid.PO.map(g => `<label class="chk"><input type="checkbox" data-c="gridTick"><span>${esc(g)}</span></label>`).join("")}
       <button class="btn sm" data-a="peDone" data-k="${key}" style="margin-top:10px">Save this attempt</button></div>`

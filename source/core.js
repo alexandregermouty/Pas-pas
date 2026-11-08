@@ -2,7 +2,7 @@
    Pas à pas · core — storage, audio, routing, helpers
    ═══════════════════════════════════════════════════════════════════ */
 "use strict";
-const APP_VERSION = "1.0";
+const APP_VERSION = "2.0";
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -30,7 +30,7 @@ const DEFAULT = () => ({
   drafts: {},       // writing drafts
   cando: {},        // manual ticks
   level: "B1",
-  set: { theme: "auto", voice: "", rate: 0.95, sound: true, vibe: true, examLevel: "B1", examDate: "", name: "Lan Anh" }
+  set: { theme: "auto", voiceMode: "natural", voice: "", rate: 0.95, sound: true, vibe: true, examLevel: "B1", examDate: "", name: "Lan Anh" }
 });
 let S;
 function load() {
@@ -46,7 +46,7 @@ function applyTheme() {
   const t = S.set.theme;
   const light = t === "light" || (t === "auto" && matchMedia("(prefers-color-scheme: light)").matches);
   document.documentElement.dataset.theme = light ? "light" : "dark";
-  const m = $('meta[name="theme-color"]'); if (m) m.content = light ? "#FAF5EE" : "#0E1626";
+  const m = $('meta[name="theme-color"]'); if (m) m.content = light ? "#F6F3EE" : "#0A1028";
 }
 
 /* ── text normalisation and answer checking ─────────────────────── */
@@ -84,53 +84,86 @@ function tokenize(s) {
   return out;
 }
 
-/* ── audio: speech synthesis ─────────────────────────────────────── */
-const TTS = {
+/* ── audio: recorded neural voice first, device voice as fallback ── */
+const SILENT = "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//OEwAAAAAAAAAAAAEluZm8AAAAPAAAABwAAA2AAVVVVVVVVVVVVVVVVVVVxcXFxcXFxcXFxcXFxcY6Ojo6Ojo6Ojo6Ojo6Oqqqqqqqqqqqqqqqqqqqqx8fHx8fHx8fHx8fHx8fj4+Pj4+Pj4+Pj4+Pj4///////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQEIAAAAAAAAANgmVBi7QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//NExAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExFMAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKYAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+const MALE = new Set(["Journaliste", "Paul Garnier", "Mehdi", "Publicité", "Chronique", "Pierre", "Examinateur", "Alex"]);
+function ttsNorm(t) { return String(t ?? "").replace(/_{2,}/g, "…").replace(/\s+/g, " ").trim(); }
+function fnv(s) { let h = 0x811c9dc5; for (const x of new TextEncoder().encode(s)) { h ^= x; h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); }
+const AUD = {
+  idx: null, loading: null, packs: {}, _el: null, unlocked: false,
+  init() { if (this.loading) return this.loading; this.loading = fetch("audio/index.json").then(r => r.ok ? r.json() : null).then(j => { this.idx = j && j.c ? j : { packs: [], c: {} }; }).catch(() => { this.idx = { packs: [], c: {} }; }); return this.loading; },
+  entry(text, m) { return this.idx && this.idx.c[fnv((m ? "m" : "f") + "|" + ttsNorm(text))]; },
+  src(p) { return "audio/" + p + ".bin?v=" + (this.idx && this.idx.v || 0); },
+  pack(p) { if (!this.packs[p]) this.packs[p] = fetch(this.src(p)).then(r => { if (!r.ok) throw new Error("pack"); return r.arrayBuffer(); }).catch(e => { delete this.packs[p]; throw e; }); return this.packs[p]; },
+  prefetch(p) { this.init().then(() => { if (this.idx.packs.includes(p)) this.pack(p).catch(() => { }); }); },
+  async url(text, m) { await this.init(); const e = this.entry(text, m); if (!e) return null; const buf = await this.pack(this.idx.packs[e[0]]); return URL.createObjectURL(new Blob([buf.slice(e[1], e[1] + e[2])], { type: "audio/mpeg" })); },
+  el() { if (!this._el) { const a = new Audio(); a.preload = "auto"; a.setAttribute("playsinline", ""); this._el = a; } return this._el; },
+  unlock() { if (this.unlocked) return; this.unlocked = true; try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) { } const a = this.el(); a.src = SILENT; a.play().catch(() => { this.unlocked = false; }); }
+};
+const WS = {
   ok: typeof speechSynthesis !== "undefined" && typeof SpeechSynthesisUtterance !== "undefined",
-  voices: [], fr: [], seq: 0,
+  voices: [], fr: [],
   load() {
     if (!this.ok) return;
     const all = speechSynthesis.getVoices() || [];
-    this.voices = all;
     const score = v => (v.lang === "fr-FR" || v.lang === "fr_FR" ? 50 : /^fr/i.test(v.lang) ? 10 : -100)
-      + (/google/i.test(v.name) ? 8 : 0) + (/premium|enhanced|natural|neural|online/i.test(v.name) ? 12 : 0)
-      + (/thomas|audrey|aurélie|amélie|marie|denise|henri|vivienne|remy|rémy|eloise|julie/i.test(v.name) ? 4 : 0)
+      + (/premium|enhanced|natural|neural|online|améliorée|amélioré/i.test(v.name) ? 14 : 0) + (/google/i.test(v.name) ? 8 : 0)
+      + (/audrey|thomas|aurélie|marie|denise|henri|vivienne|remy|rémy|eloise|julie/i.test(v.name) ? 4 : 0)
       + (/canada|québec|belg|suisse|switz/i.test(v.name + v.lang) ? -6 : 0);
-    this.fr = all.filter(v => /^fr/i.test(v.lang)).sort((a, b) => score(b) - score(a));
+    this.voices = all; this.fr = all.filter(v => /^fr/i.test(v.lang)).sort((a, b) => score(b) - score(a));
   },
   voice(i = 0) {
     if (!this.fr.length) this.load();
     if (S.set.voice) { const v = this.fr.find(x => x.voiceURI === S.set.voice); if (v) return i ? (this.fr.find(x => x !== v && x.lang === v.lang) || v) : v; }
     return this.fr[i] || this.fr[0] || null;
   },
-  stop() { if (this.ok) { this.seq++; speechSynthesis.cancel(); } },
-  speak(text, o = {}) {
-    if (!this.ok || !text) { o.onend && setTimeout(o.onend, 50); return; }
-    if (!o.keep) { this.seq++; speechSynthesis.cancel(); }
-    const u = new SpeechSynthesisUtterance(String(text).replace(/_{2,}/g, "…"));
+  speak(text, o) {
+    if (!this.ok) { o.onend && setTimeout(o.onend, 50); return; }
+    const u = new SpeechSynthesisUtterance(ttsNorm(text));
     const v = this.voice(o.alt ? 1 : 0); if (v) u.voice = v;
     u.lang = (v && v.lang) || "fr-FR";
-    u.rate = (o.rate || S.set.rate || 0.95) * (o.slow ? 0.72 : 1);
-    u.pitch = o.pitch || (o.alt && this.fr.length < 2 ? 0.82 : 1);
+    u.rate = (S.set.rate || 0.95) * (o.slow ? 0.72 : 1);
+    u.pitch = o.alt && this.fr.length < 2 ? 0.82 : 1;
     if (o.onend) { u.onend = o.onend; u.onerror = o.onend; }
-    speechSynthesis.speak(u);
-    try { speechSynthesis.resume(); } catch (e) { }
+    speechSynthesis.speak(u); try { speechSynthesis.resume(); } catch (e) { }
+  }
+};
+if (WS.ok) { WS.load(); speechSynthesis.onvoiceschanged = () => WS.load(); }
+const TTS = {
+  seq: 0,
+  get fr() { return WS.fr; },
+  get ok() { return true; },
+  load() { WS.load(); },
+  stop() { this.seq++; try { if (WS.ok) speechSynthesis.cancel(); } catch (e) { } const a = AUD._el; if (a) { try { a.pause(); a.onended = null; } catch (e) { } } },
+  speak(text, o = {}) {
+    if (!text) { o.onend && setTimeout(o.onend, 50); return; }
+    if (!o.keep) this.stop();
+    const my = this.seq;
+    const device = () => { if (my === this.seq) WS.speak(text, o); };
+    if (S.set.voiceMode === "device") return device();
+    AUD.url(text, o.alt).then(u => {
+      if (my !== this.seq) return;
+      if (!u) return device();
+      const a = AUD.el(); a.onended = null; a.onerror = null;
+      a.src = u; a.playbackRate = clamp((S.set.rate || 0.95) / 0.95 * (o.slow ? 0.75 : 1), 0.5, 1.6);
+      try { a.preservesPitch = true; a.webkitPreservesPitch = true; } catch (e) { }
+      a.onended = () => { URL.revokeObjectURL(u); o.onend && o.onend(); };
+      a.onerror = () => { URL.revokeObjectURL(u); device(); };
+      a.play().catch(() => device());
+    }).catch(device);
   },
-  /* lines: [[speaker,text],...] — alternates voices by speaker */
+  /* lines: [[speaker,text],...] — male speakers use the second voice */
   play(lines, o = {}) {
-    if (!this.ok) { o.onend && o.onend(); return; }
-    this.stop(); const my = this.seq; const spk = uniq(lines.map(l => l[0]));
-    let i = 0;
+    this.stop(); const my = this.seq; let i = 0;
     const next = () => {
       if (my !== this.seq) return;
       if (i >= lines.length) { o.onend && o.onend(); return; }
       const [who, txt] = lines[i++]; o.online && o.online(i - 1);
-      this.speak(txt, { keep: true, alt: spk.indexOf(who) % 2 === 1, rate: o.rate, onend: () => setTimeout(next, o.gap ?? 380) });
+      this.speak(txt, { keep: true, alt: MALE.has(who), slow: o.slow, onend: () => setTimeout(next, o.gap ?? 380) });
     };
     next();
   }
 };
-if (TTS.ok) { TTS.load(); speechSynthesis.onvoiceschanged = () => TTS.load(); }
 const say = (t, o) => TTS.speak(t, o);
 
 /* ── speech recognition and recording ───────────────────────────── */
@@ -199,16 +232,18 @@ const IC = {
   practice: '<svg viewBox="0 0 24 24"><path d="M5 19l4-4M14 6l4 4M12 8l4 4-7 7H5v-4z"/><path d="M15 3l6 6"/></svg>',
   exam: '<svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/><path d="M4 7v14"/></svg>',
   me: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  mute: '<svg viewBox="0 0 24 24"><path d="M4 10v4h3l4 3V7L7 10H4Z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>'
 };
 const spkBtn = (t, cls = "") => `<button class="ibtn ${cls}" data-a="say" data-t="${esc(t)}" aria-label="Listen">${IC.spk}</button>`;
 
 /* ── router ──────────────────────────────────────────────────────── */
 const TABS = [
-  { id: "today", fr: "Aujourd'hui", en: "Today", ic: IC.today },
-  { id: "learn", fr: "Apprendre", en: "Learn", ic: IC.learn },
-  { id: "practice", fr: "Pratiquer", en: "Practice", ic: IC.practice },
-  { id: "exam", fr: "Examen", en: "DELF · DALF", ic: IC.exam },
+  { id: "today", fr: "Aujourd'hui", en: "Today", ic: '<svg viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/></svg>' },
+  { id: "learn", fr: "Apprendre", en: "Learn", ic: '<svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>' },
+  { id: "practice", fr: "Pratiquer", en: "Practice", ic: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>' },
+  { id: "exam", fr: "Examen", en: "DELF · DALF", ic: '<svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8.5 13 7 21l5-2.5 5 2.5-1.5-8"/></svg>' },
   { id: "me", fr: "Moi", en: "Me", ic: IC.me }
 ];
 let stack = [{ view: "today" }];
@@ -232,7 +267,7 @@ function render() {
   const out = fn ? fn(c) : { title: "?", html: "" };
   $("#stage").innerHTML = `<div class="fade">${out.html}</div>`;
   $("#hTitle").textContent = out.title || "Pas à pas";
-  $("#hSub").textContent = out.sub || "Du B1 au C1";
+  $("#hSub").textContent = out.sub || "";
   $("#backBtn").classList.toggle("on", stack.length > 1);
   $$("#nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === rootTab()));
   out.after && out.after();
