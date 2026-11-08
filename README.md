@@ -1,24 +1,33 @@
-# Pas à pas · v2.0
+# Pas à pas · v3.0
 
 Lan Anh's French-learning app: from B1 to B2 to C1, with practice for the DELF B1, DELF B2 and DALF C1 exams, companion lessons for her two class books, and natural recorded French voices.
 
 **Live app:** https://alexandregermouty.github.io/Pas-pas/
 
-It is built like *Ôn tiếng Việt*: one installable web app (PWA), no build step on GitHub Pages, progress stored on the phone. Explanations are in English, and every rule has a short **Cho người Việt** note in Vietnamese.
+It is built like *Ôn tiếng Việt*: one installable web app (PWA), no build step on GitHub Pages, progress stored on the phone. Lessons are written in French, with short English explanations you can show or hide.
 
 ## Install it on the iPhone
 
 1. Open **https://alexandregermouty.github.io/Pas-pas/** in **Safari** (not Chrome: only Safari can add a web app to the Home Screen on iOS).
 2. Tap **Share** (the square with the arrow), scroll down and tap **Add to Home Screen**, then **Add**.
 3. Open **Pas à pas** from the Home Screen. It opens full screen, without the Safari bars, like a normal app.
-4. On Wi-Fi, go to **Réglages (⚙︎) → Voix → Keep all audio offline**. This downloads every recording (about 50 MB) so lessons play instantly, even in the metro.
+4. On Wi-Fi, go to **Réglages (⚙︎) → Voix → Keep all audio offline**. This downloads every recording (about 70 MB) so lessons play instantly, even in the metro.
 5. If there's no sound, check the silent switch on the side of the iPhone and the volume. The 🔊 button at the top turns the app's answer sounds on and off; it does not mute the voice.
 
 On Android: open the link in Chrome, then menu → **Install app**.
 
 Updates arrive by themselves: when a new version is pushed to GitHub, the app picks it up the next time it is opened online.
 
-## What's new in 2.0
+## What's new in 3.0
+
+- **French first**: lessons, questions, answers, instructions and comprehension quizzes are now in French. English appears only as an optional help line under each rule (**EN** button) and in a few glosses.
+- **Fuller lessons**, in seven steps: ① objectifs → ② un document (a dialogue, article or e-mail to read and listen to, with a comprehension quiz) → ③ la règle, with visual aids (colour-coded formulas, tables, timelines, comparisons, arrows) → ④ exemples → ⑤ erreurs fréquentes → ⑥ vocabulaire → ⑦ s'entraîner.
+- **Exercises in four levels** per lesson, getting harder each time: *Découvrir* (recognise) → *S'exercer* (fill in, choose) → *Approfondir* (correct, build, transform) → *Produire* (dictation, translation, speaking, and a written task with a model answer and a checklist).
+- **Difficulty rises towards C1**: documents grow from about 150 words (B1) to 250 words (C1), written tasks from 80–140 words to 150–300 words.
+- About 800 new sentences recorded with the natural voices.
+- No more Vietnamese notes.
+
+## What came in 2.0
 
 - **New look**: bleu de France, red and paper white; Fraunces and Be Vietnam Pro typefaces; light and dark themes; a new logo (the Eiffel Tower in front of a red sun, with a tricolour line).
 - **Natural French voices**: every sentence in the app is pre-recorded with neural voices instead of the phone's robotic voice (see *Voices* below).
@@ -33,9 +42,9 @@ Updates arrive by themselves: when a new version is pushed to GitHub, the app pi
 | Cosmopolite 3 (Hachette FLE, B1) | 32: dossiers 1–8, four lessons each |
 | Objectif Express 2 (Hachette FLE, French for work B1–B2) | 12: one per unit |
 
-In total: 92 lessons, 736 flashcards, 832 example sentences and about 1,400 exercise items.
+In total: 92 lessons, each with a document and comprehension quiz, a written task with a model answer, 736 flashcards, 832 example sentences and about 3,000 exercise items.
 
-Each lesson opens with the rule, examples to tap and hear, and the Vietnamese note. Then come flashcards and an exercise ladder (recognise → understand → write → use), with spaced review, stars and resume.
+Each lesson opens with its goals and a document to read and hear, then the rule (in French, with an English help line and visual aids), examples, common mistakes and vocabulary. Practice comes in four levels (Découvrir → S'exercer → Approfondir → Produire); the lesson counts as done when all four are done. Flashcards, spaced review, stars and resume work as before.
 
 **Course companions** follow each book's unit: the *tâche* (task), the communication goals, the grammar points and the sound of the lesson, and link to the matching grammar lessons in the main path. Objectif Express lessons add a *Repère professionnel* note on French workplace practice. All sentences and exercises were written for this app; no text, exercise or audio from the books is reproduced, so use the app alongside the books, not instead of them.
 
@@ -68,7 +77,7 @@ Progress is stored on the phone, in the browser. To move it to another device, u
 - `index.html`: the whole app (styles, scripts and lessons inlined).
 - `sw.js`: offline cache. `manifest.webmanifest`, icons, `fonts/`.
 - `audio/`: recorded voice packs.
-- `source/`: readable sources. Lessons are in `source/data/` (`b1a.js` … `c1b.js`, `cosmo_a.js`, `cosmo_b.js`, `oe.js`, `courses.js`). Run `python3 build.py` inside `source` to rebuild `index.html`, then bump `CACHE` in `sw.js`.
+- `source/`: readable sources. Lessons are in `source/data/` (`b1a.js` … `c1b.js`, `cosmo_a.js`, `cosmo_b.js`, `oe.js`, `courses.js`); the v3 documents, French rules, visuals and extra exercises are in `x_*.js`, and the French versions of older English strings in `fr_*.js`. Run `python3 build.py` inside `source` to rebuild `index.html`, then bump `CACHE` in `sw.js`.
 - `source/voice/`: the scripts used to list every spoken sentence (`collect.*`), record it (`generate.py`) and build the packs (`pack.py`). New sentences without a recording simply use the phone's voice until they are recorded.
 
 ## Hosting on GitHub Pages

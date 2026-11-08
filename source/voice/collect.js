@@ -14,6 +14,7 @@
     (l.chat || []).forEach(x => { add(x[0], P); add(x[1], P); });
     (l.phr || []).forEach(x => add(x[0], P));
     [].concat(l.sons || []).forEach(x => (x.ex || []).forEach(e => add(Array.isArray(e) ? e[0] : e, P)));
+    if (l.doc) l.doc.d.forEach(d => Array.isArray(d) ? add(plain(d[1]), P, MALE.has(d[0])) : add(plain(d), P));
   });
   IDIOMS.forEach(x => { add(x[0], "practice"); add(x[2], "practice"); });
   CONNECTORS.forEach(c => add(c[3], "practice"));

@@ -2,7 +2,7 @@
    Pas à pas · core — storage, audio, routing, helpers
    ═══════════════════════════════════════════════════════════════════ */
 "use strict";
-const APP_VERSION = "2.0";
+const APP_VERSION = "3.0";
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -38,7 +38,7 @@ function load() {
   catch (e) { S = DEFAULT(); }
 }
 let saveT = 0;
-function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Storage is full — export your progress in Moi → Settings"); } }, 120); }
+function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Mémoire pleine — exportez votre progression dans Moi → Réglages"); } }, 120); }
 function saveNow() { clearTimeout(saveT); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
 
 /* ── theme ───────────────────────────────────────────────────────── */
@@ -86,7 +86,7 @@ function tokenize(s) {
 
 /* ── audio: recorded neural voice first, device voice as fallback ── */
 const SILENT = "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//OEwAAAAAAAAAAAAEluZm8AAAAPAAAABwAAA2AAVVVVVVVVVVVVVVVVVVVxcXFxcXFxcXFxcXFxcY6Ojo6Ojo6Ojo6Ojo6Oqqqqqqqqqqqqqqqqqqqqx8fHx8fHx8fHx8fHx8fj4+Pj4+Pj4+Pj4+Pj4///////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQEIAAAAAAAAANgmVBi7QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//NExAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExFMAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKYAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
-const MALE = new Set(["Journaliste", "Paul Garnier", "Mehdi", "Publicité", "Chronique", "Pierre", "Examinateur", "Alex"]);
+const MALE = new Set(["Journaliste", "Paul Garnier", "Mehdi", "Publicité", "Chronique", "Pierre", "Examinateur", "Alex", "Marchand", "Agent", "Vendeur", "Hugo", "Animateur", "Julien", "Client", "Paul", "Médecin", "Étudiant, 22 ans", "Médecin, 38 ans", "Thomas", "Karim", "Marc", "Minh"]);
 function ttsNorm(t) { return String(t ?? "").replace(/_{2,}/g, "…").replace(/\s+/g, " ").trim(); }
 function fnv(s) { let h = 0x811c9dc5; for (const x of new TextEncoder().encode(s)) { h ^= x; h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); }
 const AUD = {
@@ -236,7 +236,7 @@ const IC = {
   mute: '<svg viewBox="0 0 24 24"><path d="M4 10v4h3l4 3V7L7 10H4Z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>'
 };
-const spkBtn = (t, cls = "") => `<button class="ibtn ${cls}" data-a="say" data-t="${esc(t)}" aria-label="Listen">${IC.spk}</button>`;
+const spkBtn = (t, cls = "") => `<button class="ibtn ${cls}" data-a="say" data-t="${esc(t)}" aria-label="Écouter">${IC.spk}</button>`;
 
 /* ── router ──────────────────────────────────────────────────────── */
 const TABS = [
@@ -272,7 +272,7 @@ function render() {
   $$("#nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === rootTab()));
   out.after && out.after();
 }
-function openSheet(html) { $("#sheet").innerHTML = `<div class="row between" style="margin-bottom:8px"><button class="btn sm ghost" data-a="closeSheet">‹ Back</button></div>` + html; $("#scrim").classList.add("on"); }
+function openSheet(html) { $("#sheet").innerHTML = `<div class="row between" style="margin-bottom:8px"><button class="btn sm ghost" data-a="closeSheet">‹ Retour</button></div>` + html; $("#scrim").classList.add("on"); }
 function closeSheet() { $("#scrim").classList.remove("on"); TTS.stop(); return true; }
 
 /* ── activity log ────────────────────────────────────────────────── */

@@ -31,29 +31,62 @@ function sameLessonFirst(l, right, field) {
   return [...pick(own, 3), ...pick(other, 3)].slice(0, 3);
 }
 const Q = {
-  rec(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", k: "Recognise", prompt: `<div class="qp">${esc(c.fr)}</div>`, audio: c.fr, ...o, why: c.exfr ? `${c.exfr}<br><span class="en">${esc(c.exen)}</span>` : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
-  recall(l, c) { const o = optsFrom(c.fr, sameLessonFirst(l, c.fr, "fr")); return { t: "mc", k: "Say it in French", prompt: `<div class="qp en" style="font-style:italic">${esc(c.en)}</div>`, ...o, why: c.exfr ? esc(c.exfr) : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
-  listen(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", k: "Listen", prompt: `<div class="muted small" style="text-align:center">Listen and choose the meaning</div>`, play: c.fr, ...o, why: `<b>${esc(c.fr)}</b>`, hear: c.fr, cat: "écoute", ik: c.key, lid: l.id, ck: c.key }; },
-  listenS(l, s, k) { const pool = (l.sent || []).filter(x => x[0] !== s[0]).map(x => x[1]); const o = optsFrom(s[1], pool.length >= 3 ? pool : [...pool, ...poolEn(l)]); return { t: "mc", k: "Listen", prompt: `<div class="muted small" style="text-align:center">Listen and choose the meaning</div>`, play: s[0], ...o, why: `<b>${esc(s[0])}</b>`, hear: s[0], cat: "écoute", ik: k, lid: l.id }; },
-  match(l, cs) { return { t: "match", k: "Match the pairs", pairs: cs.map(c => [c.fr, c.en]), cat: "lexique", lid: l.id, ik: l.id + "#match" }; },
-  nat(l, x, k) { const o = optsFrom(x[0], [x[1]], 1); return { t: "mc", k: "Which one is correct?", prompt: `<div class="muted small">Choose the sentence a French speaker would write.</div>`, ...o, why: x[2], hear: x[0], cat: l.cat, ik: k, lid: l.id }; },
-  mcq(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", k: "Choose", prompt: `<div class="qs">${fmtBlank(x[0])}</div>`, ...o, why: x[3] || "", hear: /_{2,}/.test(x[0]) ? fillBlank(x[0], x[1]) : x[1], cat: l.cat, ik: k, lid: l.id }; },
-  gapC(l, x, k) { const right = x[1].split("|")[0]; const o = optsFrom(right, x[4] || [], 3); return { t: "mc", k: "Fill the gap", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, ...o, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id }; },
-  gapT(l, x, k) { const right = x[1].split("|")[0]; return { t: "type", k: "Type the missing word", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, acc: x[1], model: right, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id, short: true }; },
-  fix(l, x, k) { return { t: "fix", k: "Find the mistake", s: x[0], bad: x[1], good: x[2], why: x[3], opts: shuffle([x[2], ...(x[4] || [])]), hear: x[0].replace(x[1], x[2]), cat: l.cat, ik: k, lid: l.id }; },
-  build(l, s, k) { return { t: "build", k: "Build the sentence", en: s[1], words: shuffle(tokenize(s[0])), ans: s[0], hear: s[0], cat: "syntaxe", ik: k, lid: l.id }; },
-  trans(l, x, k) { return { t: "type", k: "Transform", prompt: `<div class="muted small">${esc(x[0])}</div><div class="qs">${esc(x[1])}</div>`, acc: x[2], model: x[2].split("|")[0], why: "", hear: x[2].split("|")[0], self: true, cat: l.cat, ik: k, lid: l.id }; },
-  chat(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", k: "Reply", prompt: `<div class="chatb"><div><div class="who">They say</div><div class="bub">${esc(x[0])}</div></div></div><div class="muted small">Choose the best reply.</div>`, audio: x[0], ...o, why: x[3] || "", hear: x[1], cat: "interaction", ik: k, lid: l.id }; },
-  dict(l, s, k) { return { t: "type", k: "Dictation", prompt: `<div class="muted small" style="text-align:center">Listen and write what you hear</div>`, play: s[0], acc: s[0], model: s[0], why: `<span class="en">${esc(s[1])}</span>`, hear: s[0], self: true, long: true, cat: "orthographe", ik: k, lid: l.id }; },
-  tr(l, s, k) { return { t: "type", k: "Translate into French", prompt: `<div class="qp en" style="font-style:italic">${esc(s[1])}</div>`, acc: s[0], model: s[0], why: "", hear: s[0], self: true, long: true, cat: l.cat, ik: k, lid: l.id }; },
-  speak(l, s, k) { return { t: "speak", k: "Say it aloud", text: s[0], en: s[1], hear: s[0], cat: "oral", ik: k, lid: l.id }; }
+  rec(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", k: "Que veut dire… ?", prompt: `<div class="qp">${esc(c.fr)}</div>`, audio: c.fr, ...o, why: c.exfr ? `${c.exfr}<br><span class="en">${esc(c.exen)}</span>` : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
+  recall(l, c) { const o = optsFrom(c.fr, sameLessonFirst(l, c.fr, "fr")); return { t: "mc", k: "En français", prompt: `<div class="qp en" style="font-style:italic">${esc(c.en)}</div>`, ...o, why: c.exfr ? esc(c.exfr) : "", hear: c.fr, cat: "lexique", ik: c.key, lid: l.id, ck: c.key }; },
+  listen(l, c) { const o = optsFrom(c.en, sameLessonFirst(l, c.en, "en")); return { t: "mc", k: "Écoutez", prompt: `<div class="muted small" style="text-align:center">Écoutez et choisissez le sens</div>`, play: c.fr, ...o, why: `<b>${esc(c.fr)}</b>`, hear: c.fr, cat: "écoute", ik: c.key, lid: l.id, ck: c.key }; },
+  listenS(l, s, k) { const pool = (l.sent || []).filter(x => x[0] !== s[0]).map(x => x[1]); const o = optsFrom(s[1], pool.length >= 3 ? pool : [...pool, ...poolEn(l)]); return { t: "mc", k: "Écoutez", prompt: `<div class="muted small" style="text-align:center">Écoutez et choisissez le sens</div>`, play: s[0], ...o, why: `<b>${esc(s[0])}</b>`, hear: s[0], cat: "écoute", ik: k, lid: l.id }; },
+  match(l, cs) { return { t: "match", k: "Associez les paires", pairs: cs.map(c => [c.fr, c.en]), cat: "lexique", lid: l.id, ik: l.id + "#match" }; },
+  nat(l, x, k) { const o = optsFrom(x[0], [x[1]], 1); return { t: "mc", k: "Quelle phrase est correcte ?", prompt: `<div class="muted small">Choisissez la phrase qu'un francophone écrirait.</div>`, ...o, why: x[2], hear: x[0], cat: l.cat, ik: k, lid: l.id }; },
+  mcq(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", k: "Choisissez", prompt: `<div class="qs">${fmtBlank(x[0])}</div>`, ...o, why: x[3] || "", hear: /_{2,}/.test(x[0]) ? fillBlank(x[0], x[1]) : x[1], cat: l.cat, ik: k, lid: l.id }; },
+  gapC(l, x, k) { const right = x[1].split("|")[0]; const o = optsFrom(right, x[4] || [], 3); return { t: "mc", k: "Complétez", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, ...o, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id }; },
+  gapT(l, x, k) { const right = x[1].split("|")[0]; return { t: "type", k: "Écrivez le mot manquant", prompt: `<div class="qs">${fmtBlank(x[0])}</div>${x[2] ? `<div class="muted small">(${esc(x[2])})</div>` : ""}${x[3] ? `<div class="qen">${esc(x[3])}</div>` : ""}`, acc: x[1], model: right, why: gapWhy(l, x), hear: fillBlank(x[0], right), cat: l.cat, ik: k, lid: l.id, short: true }; },
+  fix(l, x, k) { return { t: "fix", k: "Trouvez l'erreur", s: x[0], bad: x[1], good: x[2], why: x[3], opts: shuffle([x[2], ...(x[4] || [])]), hear: x[0].replace(x[1], x[2]), cat: l.cat, ik: k, lid: l.id }; },
+  build(l, s, k) { return { t: "build", k: "Construisez la phrase", en: s[1], words: shuffle(tokenize(s[0])), ans: s[0], hear: s[0], cat: "syntaxe", ik: k, lid: l.id }; },
+  trans(l, x, k) { return { t: "type", k: "Transformez", prompt: `<div class="muted small">${esc(x[0])}</div><div class="qs">${esc(x[1])}</div>`, acc: x[2], model: x[2].split("|")[0], why: "", hear: x[2].split("|")[0], self: true, cat: l.cat, ik: k, lid: l.id }; },
+  chat(l, x, k) { const o = optsFrom(x[1], x[2], 3); return { t: "mc", k: "Répondez", prompt: `<div class="chatb"><div><div class="who">On vous dit</div><div class="bub">${esc(x[0])}</div></div></div><div class="muted small">Choisissez la meilleure réponse.</div>`, audio: x[0], ...o, why: x[3] || "", hear: x[1], cat: "interaction", ik: k, lid: l.id }; },
+  dict(l, s, k) { return { t: "type", k: "Dictée", prompt: `<div class="muted small" style="text-align:center">Écoutez et écrivez ce que vous entendez</div>`, play: s[0], acc: s[0], model: s[0], why: `<span class="en">${esc(s[1])}</span>`, hear: s[0], self: true, long: true, cat: "orthographe", ik: k, lid: l.id }; },
+  tr(l, s, k) { return { t: "type", k: "Traduisez en français", prompt: `<div class="qp en" style="font-style:italic">${esc(s[1])}</div>`, acc: s[0], model: s[0], why: "", hear: s[0], self: true, long: true, cat: l.cat, ik: k, lid: l.id }; },
+  write(l) { const p = l.prod; return { t: "write", k: "Production écrite", c: p.c, n: p.n, model: p.m, crit: p.k || [], cat: "écrit", ik: l.id + "#prod", lid: l.id, norep: true }; },
+  speak(l, s, k) { return { t: "speak", k: "Dites-le à voix haute", text: s[0], en: s[1], hear: s[0], cat: "oral", ik: k, lid: l.id }; }
 };
 function fmtBlank(s) { return esc(s).replace(/_{2,}/g, '<span class="blank">?</span>'); }
 function fillBlank(s, a) { return String(s).replace(/_{2,}/, a).replace(/\s*\([^)]*\)/g, "").trim(); }
 function gapWhy(l, x) { return x[5] || (l.rule && l.rule.h ? esc(l.rule.h) : ""); }
 
 /* ── lesson queue ───────────────────────────────────────────────── */
+function nivQueue(l, n) {
+  const cards = lessonCards(l), k = (t, i) => l.id + ":" + t + i;
+  const all = (arr, t) => (arr || []).map((x, i) => ({ x, i, key: k(t, i) }));
+  const C = leastSeen(cards.map((x, i) => ({ x, i })), o => k("c", o.i), 8).map(o => o.x);
+  const mc = all(l.mcq, "m"), gp = all(l.gap, "g"), fx = all(l.fix, "f"), nt = all(l.nat, "n"), xf = all(l.xf, "t"), ch = all(l.chat, "h");
+  const sents = all(l.sent, "s"), shortS = sents.filter(o => tokenize(o.x[0]).length <= 12), longS = sents.filter(o => !shortS.slice(0, 2).includes(o));
+  const q = [];
+  if (n === 1) {
+    C[0] && q.push(Q.rec(l, C[0])); C[1] && q.push(Q.rec(l, C[1])); C[2] && q.push(Q.listen(l, C[2]));
+    if (cards.length >= 4) q.push(Q.match(l, pick(cards, 4)));
+    C[3] && q.push(Q.recall(l, C[3])); C[4] && q.push(Q.recall(l, C[4]));
+    nt.slice(0, 3).forEach(o => q.push(Q.nat(l, o.x, o.key)));
+    mc.slice(0, 2).forEach(o => q.push(Q.mcq(l, o.x, o.key)));
+  } else if (n === 2) {
+    mc.slice(2).forEach(o => q.push(Q.mcq(l, o.x, o.key)));
+    gp.slice(0, 8).forEach((o, i) => q.push(i < 3 ? Q.gapC(l, o.x, o.key) : Q.gapT(l, o.x, o.key)));
+    ch[0] && q.push(Q.chat(l, ch[0].x, ch[0].key));
+  } else if (n === 3) {
+    fx.slice(0, 4).forEach(o => q.push(Q.fix(l, o.x, o.key)));
+    shortS.slice(0, 2).forEach(o => q.push(Q.build(l, o.x, o.key)));
+    xf.slice(0, 5).forEach(o => q.push(Q.trans(l, o.x, o.key)));
+    ch.slice(1).forEach(o => q.push(Q.chat(l, o.x, o.key)));
+  } else {
+    const r = longS.length >= 4 ? longS : sents;
+    r.slice(0, 2).forEach(o => q.push(Q.dict(l, o.x, o.key)));
+    r.slice(2, 4).forEach(o => q.push(Q.tr(l, o.x, o.key)));
+    r[4] && q.push(Q.speak(l, r[4].x, r[4].key)); if (!r[4] && r[0]) q.push(Q.speak(l, r[0].x, r[0].key));
+    l.prod && q.push(Q.write(l));
+  }
+  return q;
+}
 function lessonQueue(l, mode) {
+  if (/^n[1-4]$/.test(mode)) return nivQueue(l, +mode[1]);
   const cards = lessonCards(l), sent = l.sent || [];
   const k = (t, i) => l.id + ":" + t + i;
   const take = (arr, t, n) => leastSeen(arr.map((x, i) => ({ x, i })), o => k(t, o.i), n);
@@ -94,8 +127,8 @@ function lessonQueue(l, mode) {
 
 /* ── sessions ───────────────────────────────────────────────────── */
 function startSession(o) {
-  if (!o.qs || !o.qs.length) { toast("Nothing to practise here yet"); return; }
-  SS = Object.assign({ i: 0, res: [], wrong: [], repair: false, title: "Practice" }, o);
+  if (!o.qs || !o.qs.length) { toast("Rien à travailler ici pour l'instant"); return; }
+  SS = Object.assign({ i: 0, res: [], wrong: [], repair: false, title: "Entraînement" }, o);
   if (o.lid) AUD.prefetch("L-" + o.lid);
   document.body.classList.add("insession");
   renderQ();
@@ -109,7 +142,7 @@ function saveResume() {
 }
 A.quitSession = () => {
   TTS.stop();
-  if (SS && SS.kind === "lesson" && SS.i > 0 && !SS.done) { saveResume(); toast(`Saved at question ${SS.i + 1}`); }
+  if (SS && SS.kind === "lesson" && SS.i > 0 && !SS.done) { saveResume(); toast(`Enregistré à la question ${SS.i + 1}`); }
   SS = null; document.body.classList.remove("insession"); $("#fb").classList.remove("on");
   render();
   return true;
@@ -122,42 +155,61 @@ function renderQ() {
   const q = SS.qs[SS.i]; SS.answered = false; SS.sel = null;
   let body = "";
   const head = `<div class="qk">${esc(q.k)}</div>`;
-  const playBtn = q.play ? `<button class="bigplay" data-a="qplay" aria-label="Play">${IC.play}</button><button class="btn sm ghost slowbtn" data-a="qplay" data-slow="1">Slower</button>` : "";
+  const playBtn = q.play ? `<button class="bigplay" data-a="qplay" aria-label="Play">${IC.play}</button><button class="btn sm ghost slowbtn" data-a="qplay" data-slow="1">Plus lent</button>` : "";
   const audioBtn = q.audio ? `<div class="row" style="margin:6px 0">${spkBtn(q.audio)}</div>` : "";
   if (q.t === "mc") {
     body = `${head}${q.prompt}${audioBtn}${playBtn}<div class="opts">${q.opts.map((o, i) => `<button class="opt" data-a="mc" data-i="${i}"><span class="l">${"ABCDEF"[i]}</span><span>${esc(o)}</span></button>`).join("")}</div>`;
   } else if (q.t === "type") {
     body = `${head}${q.prompt}${audioBtn}${playBtn}
-      ${q.long ? `<textarea class="inp" id="ans" rows="3" autocapitalize="sentences" spellcheck="false" placeholder="Écris ici…"></textarea>` : `<input class="inp" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Écris ici…">`}
+      ${q.long ? `<textarea class="inp" id="ans" rows="3" autocapitalize="sentences" spellcheck="false" placeholder="Écrivez ici…"></textarea>` : `<input class="inp" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Écrivez ici…">`}
       ${accentBar()}
-      <div class="checkbar"><button class="btn primary block" data-a="checkType">Check</button></div>`;
+      <div class="checkbar"><button class="btn primary block" data-a="checkType">Vérifier</button></div>`;
   } else if (q.t === "build") {
     body = `${head}<div class="qp en" style="font-style:italic">${esc(q.en)}</div><div class="tiles" id="built"></div><div class="tiles bank">${q.words.map((w, i) => `<button class="tk" data-a="tk" data-i="${i}">${esc(w)}</button>`).join("")}</div>
-      <div class="row"><button class="btn sm ghost" data-a="tkUndo">Undo</button></div><div class="checkbar"><button class="btn primary block" data-a="checkBuild">Check</button></div>`;
+      <div class="row"><button class="btn sm ghost" data-a="tkUndo">Annuler</button></div><div class="checkbar"><button class="btn primary block" data-a="checkBuild">Vérifier</button></div>`;
     SS.built = [];
   } else if (q.t === "match") {
     SS.m = { L: shuffle(q.pairs.map((p, i) => ({ t: p[0], i }))), R: shuffle(q.pairs.map((p, i) => ({ t: p[1], i }))), sel: null, done: 0, err: 0 };
-    body = `${head}<div class="muted small">Tap a French phrase, then its meaning.</div><div class="match"><div style="display:flex;flex-direction:column;gap:10px" id="mLc"></div><div style="display:flex;flex-direction:column;gap:10px" id="mRc"></div></div>`;
+    body = `${head}<div class="muted small">Touchez une expression française, puis son sens.</div><div class="match"><div style="display:flex;flex-direction:column;gap:10px" id="mLc"></div><div style="display:flex;flex-direction:column;gap:10px" id="mRc"></div></div>`;
   } else if (q.t === "fix") {
     const toks = tokenize(q.s); SS.fixStage = 0;
-    body = `${head}<div class="muted small">Tap the word or words that are wrong.</div><div class="tiles bank" id="fixs">${toks.map((w, i) => `<button class="tk" data-a="fixTap" data-i="${i}">${esc(w)}</button>`).join("")}</div><div id="fixOpts"></div>`;
+    body = `${head}<div class="muted small">Touchez le ou les mots incorrects.</div><div class="tiles bank" id="fixs">${toks.map((w, i) => `<button class="tk" data-a="fixTap" data-i="${i}">${esc(w)}</button>`).join("")}</div><div id="fixOpts"></div>`;
+  } else if (q.t === "write") {
+    body = `${head}<div class="qp" style="font-size:18px;text-align:left">${esc(q.c)}</div><div class="muted small">${q.n[0]} à ${q.n[1]} mots</div>
+      <textarea class="inp" id="wrt" rows="9" autocapitalize="sentences" placeholder="Écrivez votre texte ici…"></textarea>${accentBar()}
+      <div class="row between"><span class="muted small" id="wc">0 mot</span></div>
+      <div id="wrtOut"></div><div class="checkbar"><button class="btn primary block" data-a="writeShow">Voir le modèle et m'évaluer</button></div>`;
   } else if (q.t === "speak") {
-    body = `${head}<div class="qp">${esc(q.text)}</div><div class="qen">${esc(q.en)}</div><div class="row" style="margin:12px 0">${spkBtn(q.text)}<button class="btn sm ghost" data-a="say" data-t="${esc(q.text)}" data-slow="1">Slower</button></div>
+    body = `${head}<div class="qp">${esc(q.text)}</div><div class="qen">${esc(q.en)}</div><div class="row" style="margin:12px 0">${spkBtn(q.text)}<button class="btn sm ghost" data-a="say" data-t="${esc(q.text)}" data-slow="1">Plus lent</button></div>
       <button class="bigplay rec" data-a="speakGo" aria-label="Speak">${IC.mic.replace("<svg", '<svg style="fill:none;stroke:currentColor;stroke-width:2"')}</button>
-      <div id="spkOut" class="muted small" style="text-align:center">${SR ? "Tap the microphone and read the sentence aloud." : "Your browser cannot check speech. Listen, repeat aloud, then rate yourself."}</div>
-      <div class="row" style="justify-content:center;margin-top:14px"><button class="btn sm" data-a="selfRate" data-ok="1">I said it well</button><button class="btn sm ghost" data-a="selfRate" data-ok="0">Not yet</button></div>`;
+      <div id="spkOut" class="muted small" style="text-align:center">${SR ? "Touchez le micro et lisez la phrase à voix haute." : "Votre navigateur ne peut pas vérifier la prononciation. Écoutez, répétez à voix haute, puis évaluez-vous."}</div>
+      <div class="row" style="justify-content:center;margin-top:14px"><button class="btn sm" data-a="selfRate" data-ok="1">Je l'ai bien dit</button><button class="btn sm ghost" data-a="selfRate" data-ok="0">Pas encore</button></div>`;
   }
   $("#stage").innerHTML = `<div class="fade">${sessTop()}${body}</div>`;
   if (q.t === "match") {
     $("#mLc").innerHTML = SS.m.L.map(x => `<button class="opt" data-a="mL" data-i="${x.i}">${esc(x.t)}</button>`).join("");
     $("#mRc").innerHTML = SS.m.R.map(x => `<button class="opt en" style="font-style:italic" data-a="mR" data-i="${x.i}">${esc(x.t)}</button>`).join("");
   }
+  const wr = $("#wrt"); if (wr) { const upd = () => { const n = (wr.value.match(/[\p{L}\p{N}'’-]+/gu) || []).length; $("#wc").textContent = n + (n > 1 ? " mots" : " mot"); }; wr.addEventListener("input", upd); }
   const inp = $("#ans"); if (inp) { inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); A.checkType(); } }); setTimeout(() => inp.focus({ preventScroll: true }), 60); }
   if (q.play) setTimeout(() => say(q.play), 250);
   scrollTo(0, 0);
 }
+A.writeShow = () => {
+  const q = SS.qs[SS.i]; if (SS.answered || $("#wrtOut").innerHTML) return;
+  $("#wrtOut").innerHTML = `<div class="card flat"><div class="qk">Modèle de réponse</div><div class="model">${esc(q.model).replace(/\n/g, "<br>")}</div>
+    <div class="qk" style="margin-top:14px">Auto-évaluation : cochez ce qui est vrai pour votre texte</div>${q.crit.map((c, i) => `<label class="chk"><input type="checkbox" class="crit"><span>${esc(c)}</span></label>`).join("")}</div>`;
+  $(".checkbar").innerHTML = `<button class="btn primary block" data-a="writeDone">Valider</button>`;
+  $("#wrtOut").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+A.writeDone = () => {
+  const q = SS.qs[SS.i]; if (SS.answered) return;
+  const n = $$(".crit:checked").length, ok = n >= Math.ceil(q.crit.length / 2);
+  const w = ($("#wrt").value || "").trim(); if (w) { S.writings = (S.writings || []); S.writings.unshift({ t: Date.now(), lid: q.lid, c: q.c, txt: w }); S.writings = S.writings.slice(0, 40); }
+  answer(ok, { given: "", right: "" });
+};
 function accentBar() { return `<div class="accents">${["é", "è", "ê", "à", "â", "ù", "û", "ô", "î", "ï", "ç", "œ", "ë", "É"].map(c => `<button data-a="acc" data-c="${c}" tabindex="-1">${c}</button>`).join("")}</div>`; }
-A.acc = d => { const i = $("#ans"); if (!i) return; const s = i.selectionStart ?? i.value.length, e = i.selectionEnd ?? s; i.value = i.value.slice(0, s) + d.c + i.value.slice(e); i.focus(); i.selectionStart = i.selectionEnd = s + 1; };
+A.acc = d => { const i = $("#ans") || $("#wrt"); if (!i) return; const s = i.selectionStart ?? i.value.length, e = i.selectionEnd ?? s; i.value = i.value.slice(0, s) + d.c + i.value.slice(e); i.focus(); i.selectionStart = i.selectionEnd = s + 1; };
 A.qplay = d => { const q = SS.qs[SS.i]; say(q.play, { slow: !!d.slow }); };
 A.mc = (d, el) => {
   if (SS.answered) return; const q = SS.qs[SS.i]; const i = +d.i; const ok = i === q.a;
@@ -201,7 +253,7 @@ A.fixTap = (d, el) => {
   const bads = badIdx(q.s, q.bad);
   if (bads.includes(i)) {
     SS.fixStage = 1; bads.forEach(j => $$("#fixs .tk")[j].classList.add("pick"));
-    $("#fixOpts").innerHTML = `<div class="muted small" style="margin-top:12px">Replace <b>${esc(q.bad)}</b> with:</div><div class="opts">${q.opts.map((o, j) => `<button class="opt" data-a="fixOpt" data-i="${j}"><span class="l">${"ABCDEF"[j]}</span><span>${esc(o)}</span></button>`).join("")}</div>`;
+    $("#fixOpts").innerHTML = `<div class="muted small" style="margin-top:12px">Remplacez <b>${esc(q.bad)}</b> par :</div><div class="opts">${q.opts.map((o, j) => `<button class="opt" data-a="fixOpt" data-i="${j}"><span class="l">${"ABCDEF"[j]}</span><span>${esc(o)}</span></button>`).join("")}</div>`;
   } else {
     el.classList.add("bad"); bads.forEach(j => $$("#fixs .tk")[j].classList.add("pick"));
     answer(false, { given: toks[i], right: q.s.replace(q.bad, q.good) });
@@ -223,7 +275,7 @@ A.speakGo = () => {
   if (!SR) { say(q.text); return; }
   TTS.stop(); $("#spkOut").innerHTML = `<span class="recdot"></span> Listening…`;
   recog = listenOnce((alts, err) => {
-    if (!alts) { $("#spkOut").textContent = err === "not-allowed" ? "Microphone permission was refused. Rate yourself instead." : "I did not catch that. Try again, or rate yourself."; return; }
+    if (!alts) { $("#spkOut").textContent = err === "not-allowed" ? "L'accès au micro a été refusé. Évaluez-vous vous-même." : "Je n'ai pas bien entendu. Réessayez, ou évaluez-vous."; return; }
     const best = alts.map(a => ({ a, s: similarity(a, q.text) })).sort((x, y) => y.s - x.s)[0];
     const ok = best.s >= 0.75;
     $("#spkOut").innerHTML = `I heard: <b>${esc(best.a)}</b> · ${Math.round(best.s * 100)}%`;
@@ -247,7 +299,7 @@ function record(ok, o) {
   const q = SS.qs[SS.i];
   SS.res.push(ok ? 1 : 0);
   if (!ok) {
-    if (!SS.repair) SS.wrong.push(SS.i);
+    if (!SS.repair && !q.norep) SS.wrong.push(SS.i);
     S.mistakes.unshift({ t: Date.now(), q, given: o.given || "", cat: q.cat || "autre", lid: q.lid || "", type: q.t });
     S.mistakes = S.mistakes.slice(0, 160);
   } else if (o.accent) {
@@ -261,20 +313,20 @@ function showFb(ok, o) {
   const q = SS.qs[SS.i]; const fb = $("#fb");
   let html;
   if (o.self && !ok) {
-    html = `<h4>Compare with the model</h4>
-      <div class="muted small">You wrote</div><div class="ans" style="font-weight:500">${esc(o.given)}</div>
-      <div class="muted small" style="margin-top:6px">Model ${o.sim != null ? `· ${Math.round(o.sim * 100)}% of words match` : ""}</div><div class="ans">${esc(q.model)}</div>
+    html = `<h4>Comparez avec le modèle</h4>
+      <div class="muted small">Votre réponse</div><div class="ans" style="font-weight:500">${esc(o.given)}</div>
+      <div class="muted small" style="margin-top:6px">Modèle ${o.sim != null ? `· ${Math.round(o.sim * 100)} % de mots en commun` : ""}</div><div class="ans">${esc(q.model)}</div>
       ${q.why ? `<div class="why">${q.why}</div>` : ""}
-      <div class="row" style="margin-top:10px">${spkBtn(q.hear || q.model)}<button class="btn primary" style="flex:1" data-a="selfFb" data-ok="1">Mine is also right</button><button class="btn" style="flex:1" data-a="selfFb" data-ok="0">I made a mistake</button></div>`;
+      <div class="row" style="margin-top:10px">${spkBtn(q.hear || q.model)}<button class="btn primary" style="flex:1" data-a="selfFb" data-ok="1">Ma réponse est juste aussi</button><button class="btn" style="flex:1" data-a="selfFb" data-ok="0">Je me suis trompée</button></div>`;
     fb.className = "sheet-fb on";
   } else {
-    const title = ok ? (o.accent ? "Correct — check the accents" : pick(["Bien joué !", "Exactement !", "Parfait !", "C'est ça !", "Très bien !"], 1)[0]) : pick(["Pas tout à fait", "Presque…", "Pas encore"], 1)[0];
+    const title = ok ? (o.accent ? "Correct — attention aux accents" : pick(["Bien joué !", "Exactement !", "Parfait !", "C'est ça !", "Très bien !"], 1)[0]) : pick(["Pas tout à fait", "Presque…", "Pas encore"], 1)[0];
     const showAns = !ok || o.accent || q.t === "type" || q.t === "fix" || q.t === "build";
     html = `<h4>${ok ? "✓" : "✕"} ${esc(title)}</h4>
       ${showAns && o.right ? `<div class="ans">${esc(o.right)}</div>` : ""}
-      ${!ok && o.given && q.t !== "mc" ? `<div class="muted small">You wrote: ${esc(o.given)}</div>` : ""}
+      ${!ok && o.given && q.t !== "mc" ? `<div class="muted small">Votre réponse : ${esc(o.given)}</div>` : ""}
       ${q.why ? `<div class="why">${q.why}</div>` : ""}
-      <div class="row" style="margin-top:10px">${q.hear ? spkBtn(q.hear) : ""}<button class="btn primary" style="flex:1" data-a="next">Continue →</button></div>`;
+      <div class="row" style="margin-top:10px">${q.hear ? spkBtn(q.hear) : ""}<button class="btn primary" style="flex:1" data-a="next">Continuer →</button></div>`;
     fb.className = "sheet-fb on " + (ok ? "ok" : "no");
   }
   fb.innerHTML = `<div class="in">${html}</div>`;
@@ -314,7 +366,7 @@ function finishSession() {
     <p class="muted">${esc(r.msg || SS.title)}</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
       ${r.extra || ""}
-      <button class="btn primary block" data-a="endSession">Done</button>
+      <button class="btn primary block" data-a="endSession">Terminer</button>
     </div></div>`;
   scrollTo(0, 0);
 }
@@ -331,10 +383,22 @@ A.startLesson = d => {
   startSession({ kind: "lesson", lid: l.id, mode, qs: lessonQueue(l, mode), title: l.t, noRepair: mode === "quick", onDone: (sc, st) => lessonDone(l, sc, st, mode) });
 };
 function lessonDone(l, score, st, mode) {
+  if (/^n[1-4]$/.test(mode)) {
+    S.niv = S.niv || {}; const ns = S.niv[l.id] = S.niv[l.id] || {}, n = +mode[1];
+    ns[n] = Math.max(ns[n] || 0, st);
+    lessonCards(l).forEach(c => { if (!S.cards[c.key]) S.cards[c.key] = { b: 0, due: Date.now() + DAY, r: 0, w: 0 }; });
+    const nv = NIV.find(v => !ns[v.n]);
+    if (nv || lessonState(l.id).done) {
+      if (!nv) { const s0 = S.lessons[l.id]; s0.best = Math.max(s0.best || 0, score); }
+      planMark("les"); save();
+      return { msg: `${l.t} · niveau ${n} terminé`, extra: nv ? `<button class="btn block" data-a="endNiv" data-id="${l.id}" data-n="${nv.n}">Niveau ${nv.n} · ${nv.t} →</button>` : "" };
+    }
+    st = Math.round((ns[1] + ns[2] + ns[3] + ns[4]) / 4);
+  }
   const s = S.lessons[l.id] || {};
   const firstTime = !s.done;
   if (mode === "quick") {
-    if (score < 100) return { msg: "Not quite yet — do the full lesson to lock it in." };
+    if (score < 100) return { msg: "Pas encore tout à fait — faites la leçon complète pour la consolider." };
     st = 2;
   }
   s.done = true; s.runs = (s.runs || 0) + 1; s.last = Date.now();
@@ -347,10 +411,11 @@ function lessonDone(l, score, st, mode) {
   planMark("les"); save();
   const nx = lvlLessons(l.lvl).find(x => !lessonState(x.id).done && x.id !== l.id);
   return {
-    msg: `${l.t} · ${firstTime ? (l.cards || []).length + " new cards added to review" : "next review in " + plural(iv, "day", "days")}`,
-    extra: nx ? `<button class="btn block" data-a="endThen" data-go="lesson" data-id="${nx.id}">Next: ${esc(nx.t)} →</button>` : ""
+    msg: `${l.t} · ${firstTime ? (l.cards || []).length + " nouvelles cartes à réviser" : "prochaine révision dans " + plural(iv, "jour", "jours")}`,
+    extra: nx ? `<button class="btn block" data-a="endThen" data-go="lesson" data-id="${nx.id}">Suivante : ${esc(nx.t)} →</button>` : ""
   };
 }
+A.endNiv = d => { SS = null; document.body.classList.remove("insession"); A.startNiv(d); };
 A.endThen = d => { SS = null; document.body.classList.remove("insession"); stack = [{ view: "learn" }]; go(d.go, { id: d.id }); };
 
 /* ── spaced review of cards ─────────────────────────────────────── */
@@ -368,20 +433,20 @@ function cardQs(keys) {
     const c = cardByKey(k), l = LESSON[c.lid], b = S.cards[k].b;
     if (b <= 1) return Math.random() < .6 ? Q.rec(l, c) : Q.listen(l, c);
     if (b <= 3) return Q.recall(l, c);
-    return Object.assign({ t: "type", k: "Type it in French", prompt: `<div class="qp en" style="font-style:italic">${esc(c.en)}</div>${c.exen ? `<div class="muted small">${esc(c.exen)}</div>` : ""}`, acc: c.fr, model: c.fr, why: c.exfr ? esc(c.exfr) : "", hear: c.fr, self: c.fr.split(" ").length > 3, cat: "lexique", ik: k, lid: l.id, ck: k });
+    return Object.assign({ t: "type", k: "Écrivez en français", prompt: `<div class="qp en" style="font-style:italic">${esc(c.en)}</div>${c.exen ? `<div class="muted small">${esc(c.exen)}</div>` : ""}`, acc: c.fr, model: c.fr, why: c.exfr ? esc(c.exfr) : "", hear: c.fr, self: c.fr.split(" ").length > 3, cat: "lexique", ik: k, lid: l.id, ck: k });
   });
 }
 A.reviewCards = d => {
   const keys = d.weak ? pick(weakCards(), 15) : shuffle(dueCards()).slice(0, 20);
-  if (!keys.length) { toast(d.weak ? "No weak cards — well done" : "Nothing due right now"); return; }
-  startSession({ kind: "cards", title: d.weak ? "Weak cards" : "Card review", qs: cardQs(keys), onDone: sc => { planMark("rev"); return { msg: `${keys.length} cards reviewed` }; } });
+  if (!keys.length) { toast(d.weak ? "Aucune carte fragile — bravo !" : "Rien à réviser pour l'instant"); return; }
+  startSession({ kind: "cards", title: d.weak ? "Cartes fragiles" : "Révision des cartes", qs: cardQs(keys), onDone: sc => { planMark("rev"); return { msg: `${keys.length} cartes révisées` }; } });
 };
 A.reviewLessons = () => {
   const due = LESSONS.filter(l => isDue(l.id)).slice(0, 5);
-  if (!due.length) { toast("No lesson is due for review"); return; }
+  if (!due.length) { toast("Aucune leçon à réviser"); return; }
   const qs = [];
   due.forEach(l => { const q = lessonQueue(l, "challenge"); qs.push(...pick(q.filter(x => ["type", "fix", "mc"].includes(x.t)), 3)); });
-  startSession({ kind: "lessonReview", title: "Lesson review", qs: shuffle(qs), onDone: (sc) => {
+  startSession({ kind: "lessonReview", title: "Révision des leçons", qs: shuffle(qs), onDone: (sc) => {
     due.forEach(l => { const s = S.lessons[l.id]; s.reviews = (s.reviews || 0) + 1; s.due = Date.now() + [2, 5, 12, 30, 60, 120][Math.min(s.reviews, 5)] * DAY * (sc < 60 ? .5 : 1); });
     planMark("rev"); save(); return { msg: due.map(l => l.t).join(" · ") };
   } });
@@ -390,6 +455,6 @@ A.reviewMistakes = () => {
   const ms = S.mistakes.filter(m => m.q && !m.soft).slice(0, 40);
   const seen = new Set(); const qs = [];
   ms.forEach(m => { const k = m.q.ik || JSON.stringify(m.q).slice(0, 80); if (!seen.has(k) && qs.length < 12) { seen.add(k); qs.push(m.q); } });
-  if (!qs.length) { toast("Your mistake notebook is empty"); return; }
-  startSession({ kind: "mistakes", title: "Mistake notebook", qs: shuffle(qs), onDone: () => { planMark("rev"); return { msg: "Mistakes revisited" }; } });
+  if (!qs.length) { toast("Votre carnet d'erreurs est vide"); return; }
+  startSession({ kind: "mistakes", title: "Carnet d'erreurs", qs: shuffle(qs), onDone: () => { planMark("rev"); return { msg: "Erreurs revues" }; } });
 };
